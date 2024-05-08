@@ -7,8 +7,9 @@ mov ah, 0x0
 mov al, 0x3
 int 0x10
 
-;mov ax, 0x07c0
-mov ax, _test
+mov ax, 0x0000
+mov bx, _test
+mov byte al, [bx]
 mov bx, ax
 
 loop:
@@ -30,15 +31,14 @@ jne loop
 
 jmp hang
 
-
 ; end of proccess
 ;
 hang:
 jmp hang
 
+_test: db 0x15, 0x00
+
 times 510-($-$$) db 0
 
-_test:
 db 0x55
 db 0xAA
-
