@@ -83,14 +83,14 @@ call print_str
 call print_str
 
 
-; practice 4 (print address)
+; practice 4 (print valu in address)
 
 mov ax, p4_title
 call print_str
 
-mov ax, top_of_2nd_sector
-mov ax, 0x200
-
+mov ax, 0x0000
+mov bx, _test
+mov byte al, [bx]
 mov bx, ax
 
 p4_loop:
@@ -190,7 +190,7 @@ p3_title:
 	db 'practice 3 (add 1 to 100 and print it)', 0x0a, 0x0d, 0x0a, 0x0d, 0x00
 
 p4_title:
-	db 'practice 4 (print some address)', 0x0a, 0x0d, 0x0a, 0x0d, 0x00
+	db 'practice 4 (print valu in address)', 0x0a, 0x0d, 0x0a, 0x0d, 0x00
 
 p5_title:
 	db 'practice 5 (read disk)', 0x0a, 0x0d, 0x0a, 0x0d, 0x00
@@ -204,6 +204,8 @@ p6_msg:
 crlf:
 	db '', 0x0a, 0x0d, 0x00
 
+_test:
+	db 0x15, 0x00
 
 print_str:
 
