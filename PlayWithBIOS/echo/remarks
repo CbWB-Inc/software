@@ -1,5 +1,0 @@
-BIOSコール確認
-	0x16	Keyboard Services
-		0x00	Read Keyboard Input
-		0x01	Return Keyboard Status
-		0x02	Return Shift Flag Status
