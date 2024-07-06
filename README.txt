@@ -5,4 +5,4 @@ PlayWhthBoot ： ブートで遊ぼっ！
 
 PlyWithBIOS : BIOSと戯れよっ！
   x86系のPCでリアルモードでBIOSと遊んでみようというネタです
-  （）
+  （ ）
