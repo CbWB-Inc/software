@@ -85,6 +85,6 @@ _third_sector:
     times 0x0600-($-$$) db 0
 
 _fourth_sector:
-    db 'Forth Gate Ooen!', 0x0d, 0x0a, 0x00
+    db 'Forth Gate Oen!', 0x0d, 0x0a, 0x00
 
     times 0x0800 -($-$$) db 0
