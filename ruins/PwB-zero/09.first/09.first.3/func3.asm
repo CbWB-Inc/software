@@ -1,0 +1,145 @@
+org 0x0000  ; 読み込む先はどこでも良いので org 0
+
+start:
+    push ax
+    push bx
+    push si
+    push ds
+    push es
+
+    mov ax, cs
+    mov ds, ax     ; DSをCSに合わせる
+    mov es, ax
+
+    call get_cursor_pos2
+    mov bx, ax
+    
+    mov ah, 20
+    mov al, 70
+    call set_cursor_pos2
+    
+    call proc
+
+    mov ax, bx
+    call set_cursor_pos2
+    
+    pop es
+    pop ds
+    pop si
+    pop bx
+    pop ax
+
+    retf   ; ← 割り込みハンドラから呼ばれるため必ず retf で戻る
+
+proc:
+
+    cli
+    mov ax, .msg
+;    call far [disp_str_ptr]
+    call disp_str2
+    sti
+
+    ret
+
+
+.msg: db 'Hi!', 0x00, 0xff, 0xff, 0xff, 0xff
+baddr dw 0
+
+cursor_pos_seg equ 0x07c0
+cursor_pos_off equ 0x2295
+
+bseg equ 0x07c0
+
+;disp_str_ptr:
+;    dw 0x1FA2
+;    dw 0x07c0
+
+
+%include "def.asm"
+
+disp_str2:
+
+    push ax
+    push si
+
+    mov si, ax
+    mov ah, 0x0E
+
+._loop:
+    lodsb
+    or al, al
+    jz ._loop_end
+    int 0x10
+    jmp ._loop
+
+._loop_end:
+    pop si
+    pop ax
+
+    ret
+
+;********************************
+; get_cursor_pos
+; カーソル位置取得
+; paramater : なし
+; return    : ah : 現在の行（0オリジン）
+;           : al : 現在の列（0オリジン）
+;********************************
+get_cursor_pos2:
+
+    push bx
+    push cx
+
+    mov ah, 0x03
+    mov al, 0x00
+    mov bh, 0x00    ; 当面0ページ固定で様子を見る
+    mov bl, 0x00    ; 当面0ページ固定で様子を見る
+    int 0x10
+
+    mov ax, dx
+    mov bx, cx
+
+    pop dx
+    pop cx
+
+    ret
+
+
+;********************************
+; set_cursor_pos
+; カーソル位置設定
+; parameter : ah : 設定する行（0オリジン）
+;           : al : 設定する列（0オリジン）
+; return : 事実上なし
+;********************************
+set_cursor_pos2:
+
+    push ax
+    push bx
+
+    mov dx, ax
+    mov ah, 0x02
+    mov al, 0x00
+    mov bh, 0x00    ; 当面０ページで固定
+    mov bl, 0x00    ; 当面０ページで固定
+    int 0x10
+
+    pop bx
+    pop ax
+
+    ret
+
+
+
+;==============================================================
+; ファイル長の調整
+;==============================================================
+_padding4:
+    times 0x0800-($-$$)-2 db 0
+
+;********************************
+; セクションシグネチャ
+;********************************
+
+db 0x55
+db 0xAA
