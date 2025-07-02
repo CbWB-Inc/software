@@ -62,11 +62,38 @@ task_body:
 .skip:
 
     ; メッセージ関連処理
-    mov al, 0x03
+    mov bx, 0x0000
+    mov dx, 0x0000
     call recv_message
-    jz ._msg_skip
+    jz ._msg_not_me
+    mov cx, ax
+    mov dx, bx
+    mov ah, 9
+    mov al, 45
+    mov bh, 0x07
+    mov bl, '('
+    call putcd
+    
+    mov ah, 9
+    mov al, 46
+    mov bh, 0x07
+    mov bl, ch
+    add bl, '0'
+    call putcd
+    
+    mov ah, 9
+    mov al, 47
+    mov bh, 0x07
+    mov bl, ')'
+    call putcd
+    
+    mov ah, 9
+    mov al, 48
+    mov bx, dx
+    call disp_word_hexd
 
-._msg_skip
+._msg_end:
+._msg_not_me
 
     ; heartbeatの更新
     
@@ -83,7 +110,16 @@ task_body:
 ; 共通ルーチンなど（必要に応じて）
 ;----------------------------------
 recv_message:
+
+    mov al, 0x03
+    call recv_my_msg
+    jz .no_msg
+
+
     ret
+
+.no_msg:
+        ret
 
 get_key:
     push bx

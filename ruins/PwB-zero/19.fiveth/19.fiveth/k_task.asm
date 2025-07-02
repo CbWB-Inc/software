@@ -49,8 +49,13 @@ task_body:
     call get_key_data
     ; こそっとbxにキーコードが返ってきてるので、それで遊ぶ
     mov ax, bx
+    and ah, 0x01
+    cmp ah, 0x00
+    je .send_skip
     call send_message
-    
+
+.send_skip:
+
     sti
 
     ; 動作確認＆デモ処理
@@ -107,6 +112,8 @@ task_body:
 send_message:
 
     mov bx, ax
+    cmp bl, '2'
+    je ._id2
     cmp bl, '3'
     je ._id3
     cmp bl, '4'
@@ -116,6 +123,12 @@ send_message:
     mov ax, 0x0000
     mov bx, 0x0000
     jmp ._exit
+
+._id2:
+    call get_tick
+    mov bx, ax
+    mov al, 0x02
+    jmp ._send
 
 ._id3:
     call get_tick
@@ -143,15 +156,15 @@ send_message:
     jz ._full
 
     
-    mov ah, 17
-    mov al, 20
-    mov bx, cx
-    call disp_word_hexd
+    ;mov ah, 17
+    ;mov al, 20
+    ;mov bx, cx
+    ;call disp_word_hexd
     
-    mov ah, 17
-    mov al, 25
-    mov bx, dx
-    call disp_word_hexd
+    ;mov ah, 17
+    ;mov al, 25
+    ;mov bx, dx
+    ;call disp_word_hexd
 
     jmp ._exit
 

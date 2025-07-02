@@ -49,6 +49,79 @@ task_body:
     call disp_word_hexd
 
 
+    ; メッセージ関連処理
+    mov bx, 0x0000
+    mov dx, 0x0000
+    call recv_message
+    jz ._msg_not_me
+    mov cx, ax
+    mov dx, bx
+    mov ah, 15
+    mov al, 38
+    mov bh, 0x07
+    mov bl, '('
+    call putcd
+    
+    mov ah, 15
+    mov al, 39
+    mov bh, 0x07
+    mov bl, ch
+    add bl, '0'
+    call putcd
+    
+    mov ah, 15
+    mov al, 40
+    mov bh, 0x07
+    mov bl, ')'
+    call putcd
+    
+    mov ah, 15
+    mov al, 41
+    mov bx, dx
+    call disp_word_hexd
+
+._msg_end:
+._msg_not_me
+
+    ;mov ax, msgq_seg
+    ;mov es, ax
+    ;mov ds, ax
+    
+    ;mov ah, 15
+    ;mov al, 46
+    ;mov bx, [es:msgq_data_ofs + 0]
+    ;call disp_word_hexd
+
+    ;mov si, msgq_seg
+    ;mov ah, 15
+    ;mov al, 51
+    ;mov bx, [es:msgq_data_ofs + 2]
+    ;call disp_word_hexd
+
+    ;mov si, msgq_seg
+    ;mov ah, 15
+    ;mov al, 56
+    ;mov bx, [es:msgq_data_ofs + 4]
+    ;call disp_word_hexd
+
+    ;mov si, msgq_seg
+    ;mov ah, 15
+    ;mov al, 61
+    ;mov bx, [es:msgq_data_ofs + 6]
+    ;call disp_word_hexd
+
+    ;mov si, msgq_seg
+    ;mov ah, 15
+    ;mov al, 66
+    ;mov bx, [es:msgq_data_ofs + 8]
+    ;call disp_word_hexd
+
+
+
+
+
+
+
     sti
 
     ret
@@ -58,6 +131,29 @@ task_body:
 ;----------------------------------
 ; 共通ルーチンなど（必要に応じて）
 ;----------------------------------
+recv_message:
+
+    mov al, 0x02
+    call recv_my_msg
+    jz .no_msg
+    mov cx, ax
+    mov dx, bx
+
+    ;mov ah, 3
+    ;mov al, 0
+    ;mov bx, cx
+    ;call disp_word_hexd
+
+    ;mov ah, 3
+    ;mov al, 5
+    ;mov bx, dx
+    ;call disp_word_hexd
+
+    ret
+
+.no_msg:
+        ret
+
 %include "routine_imp.inc"
 
 %include "routine2.asm"

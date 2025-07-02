@@ -29,6 +29,7 @@ setup:
     cli
     call init_env
     call init_shared_log
+    call init_msgq
     
     call load_k_task
     call load_d_task
@@ -133,6 +134,40 @@ init_shared_log:
     pop es
     ret
 
+init_msgq:
+    push es
+    push ds
+    
+    ; msgqの初期化
+    mov ax, msgq_seg
+    mov es, ax
+    mov ds, ax
+    
+    
+    ;mov bx, msgq_head_ofs
+    ;mov ax, 0x0004
+    mov word [es:msgq_head_ofs], 0x000c
+    
+    ;mov ax, msgq_len * msgq_entry_size
+    ;mov ax, msgq_len
+    ;mov bx, msgq_tail_ofs
+    mov word [es:msgq_tail_ofs], 0x0008
+    
+    mov ax, 0x0000
+    mov bx, msgq_data_ofs
+    mov [es:bx+2], ax
+    
+    mov ax, 0x0000
+    mov bx, msgq_data_ofs
+    mov [es:bx+4], ax
+    
+    mov ax, 0x0000
+    mov bx, msgq_data_ofs
+    mov [es:bx+6], ax
+    
+    pop ds
+    pop es
+    ret
 
 
 ;********************************
