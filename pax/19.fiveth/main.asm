@@ -29,6 +29,7 @@ setup:
     cli
     call init_env
     call init_shared_log
+    call init_msgq
     
     call load_k_task
     call load_d_task
@@ -133,6 +134,40 @@ init_shared_log:
     pop es
     ret
 
+init_msgq:
+    push es
+    push ds
+    
+    ; msgqの初期化
+    mov ax, msgq_seg
+    mov es, ax
+    mov ds, ax
+    
+    
+    ;mov bx, msgq_head_ofs
+    ;mov ax, 0x0004
+    mov word [es:msgq_head_ofs], 0x000c
+    
+    ;mov ax, msgq_len * msgq_entry_size
+    ;mov ax, msgq_len
+    ;mov bx, msgq_tail_ofs
+    mov word [es:msgq_tail_ofs], 0x0008
+    
+    mov ax, 0x0000
+    mov bx, msgq_data_ofs
+    mov [es:bx+2], ax
+    
+    mov ax, 0x0000
+    mov bx, msgq_data_ofs
+    mov [es:bx+4], ax
+    
+    mov ax, 0x0000
+    mov bx, msgq_data_ofs
+    mov [es:bx+6], ax
+    
+    pop ds
+    pop es
+    ret
 
 
 ;********************************
@@ -227,7 +262,7 @@ init_ctx_p_task2:
     mov [si + context_cs], ax
     mov ax, 0x0200     ; 適当な flags（IF=1にしてもよい）
     mov [si + context_flags], ax    
-    mov ax, 0x0003     ; 
+    mov ax, 0x0004    ; 
     mov [si + context_id], ax    
     
     ; ctx_child2 初期化
@@ -254,7 +289,7 @@ init_ctx_p_task3:
     mov [si + context_cs], ax
     mov ax, 0x0200     ; 適当な flags（IF=1にしてもよい）
     mov [si + context_flags], ax    
-    mov ax, 0x0003     ; 
+    mov ax, 0x0005     ; 
     mov [si + context_id], ax    
     
     ; ctx_child2 初期化
@@ -495,8 +530,8 @@ irq0_handler:
     push gs
 
     ; 動作確認用表示処理
-    mov ah, 19
-    mov al, 30
+    mov ah, 3
+    mov al, 10
     mov bx, ._s_msg
     call disp_strd
     
@@ -512,8 +547,8 @@ irq0_handler:
 
     ; 動作確認用表示処理
     mov bx, ax
-    mov ah, 19
-    mov al, 33
+    mov ah, 3
+    mov al, 13
     call disp_word_hexd
     
     ;mov al, ':'
@@ -671,8 +706,8 @@ irq1_handler:
     mov es, ax
     
     ; 動作確認用表示
-    mov ah, 21
-    mov al, 30
+    mov ah, 5
+    mov al, 10
     mov bx, ._s_msg
     call disp_strd
 
@@ -682,8 +717,8 @@ irq1_handler:
 
     mov bx, ax
     
-    mov ah, 21
-    mov al, 33
+    mov ah, 5
+    mov al, 13
     call disp_word_hexd
 
     cmp bl, 0xe0

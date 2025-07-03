@@ -1,21 +1,20 @@
-19.fiveth
+19.fiveth.7
 
-  タスクの役割を整えました。
-  子タスクとしてp\task、d_task、孫タスクとしてk_task1～k\task3の5タスク構成になりました。
-  キーボードハンドラで行っていたキーコードのデコードをやめ、キーコードを送るだけに専念させました。
-  p_taskはキーコードを受け取りデコードを行いキーバッファに格納するようになりました。
-  k_task1はキーバッファからアスキーにデコードされたデータを取り出し表示するようになりました。
-  各タスクの稼働状態について、最低限の監視機構を実装しました。
-  タイマ割り込みの周期を調整しました。
-  なんとなくOSっぽくなってきました。
+  scancode_tableを整備しました。基本的なキーには対応しています。
+  ファンクションキーなど未対応のキーもあります。
+  テーブル対応したため実コード部は未使用なのですが削除すると
+  動作しなくなるためそのままにしてあります。
+  いつか折を見て対応したいと思います。
 
 
-  The roles of the tasks have been organized.
-  The system now consists of five tasks: child tasks p_task and d_task, and grandchild tasks k_task1 to k_task3.
-  The keyboard handler no longer decodes keycodes and now only sends them.
-  p_task receives keycodes, decodes them, and stores them in a key buffer.
-  k_task1 retrieves ASCII-decoded data from the key buffer and displays it.
-  A minimal monitoring mechanism for task activity has been implemented.
-  The timer interrupt period has been adjusted.
-  It's starting to feel like an operating system.
 
+  We have refined the `scancode_table`.  
+  It now supports basic keys.
+
+  Some keys, such as function keys, remain unsupported.
+
+  Although the actual code section is no longer used due to the table support,  
+  removing it causes the system to malfunction.  
+  Therefore, it has been left as-is.
+
+  We hope to address this someday when the time is right.

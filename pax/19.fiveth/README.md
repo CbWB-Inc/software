@@ -1,31 +1,27 @@
-# 19.fiveth
+# 19.fiveth.7
 
-## 🗾 概要（Japanese）
+## 🧷 日本語
 
-タスクの役割を整えました。  
-子タスクとして `p_task`, `d_task`、孫タスクとして `k_task1`〜`k_task3` の5タスク構成になりました。
+`scancode_table` を整備しました。  
+基本的なキーには対応しています。
 
-キーボードハンドラで行っていたキーコードのデコードをやめ、キーコードを送るだけに専念させました。  
-`p_task` はそれを受け取りデコードし、キーバッファに格納します。  
-`k_task1` はバッファからASCIIデータを取り出し、画面に表示します。
+ファンクションキーなど未対応のキーもあります。
 
-また、各タスクの稼働状態を確認する**簡易監視機構**を実装しました。  
-さらに、タイマ割り込みの周期を調整することで、システム全体の動作安定性が向上しています。
+テーブルに対応したため、実コード部は未使用なのですが、  
+削除すると動作しなくなるため、そのままにしてあります。
 
-なんとなく、OSっぽくなってきました。
+いつか折を見て対応したいと思います。
 
 ---
 
-## 🌐 Overview（English）
+## 🧷 English
 
-This version organizes the roles of each task and finalizes a **five-task structure**:  
-two child tasks (`p_task`, `d_task`) and three grandchild tasks (`k_task1` to `k_task3`).
+We have refined the `scancode_table`.  
+It now supports basic keys.
 
-The keyboard interrupt handler has been simplified to **send only keycodes**,  
-leaving the decoding process to `p_task`, which stores the result into a key buffer.  
-Then, `k_task1` retrieves the decoded ASCII input from the buffer and displays it on the screen.
+Some keys, such as function keys, remain unsupported.
 
-A **basic monitoring mechanism** for task activity has also been implemented,  
-and the **timer interrupt cycle** was tuned to improve overall system responsiveness.
+Although the actual code section is no longer used due to table integration,  
+removing it causes the system to malfunction.
 
-It’s starting to resemble a true operating system — just a little more each time.
+We hope to address this someday when the time is right.

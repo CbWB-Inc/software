@@ -27,19 +27,19 @@ task_body:
     cli
     call set_own_seg
     
-    mov ah, 9
-    mov al, 30
+    mov ah, 11
+    mov al, 10
     mov bx, ._s_msg
     call disp_strd
 
     call get_tick
     mov bx, ax
-    mov ah, 9
-    mov al, 33
+    mov ah, 11
+    mov al, 13
     call disp_word_hexd
     
-    mov ah, 9
-    mov al, 37
+    mov ah, 11
+    mov al, 25
     mov bh, 7
     mov bl, ':'
     call putcd
@@ -47,26 +47,53 @@ task_body:
     call get_key
     jz .skip
     mov cx, ax
-    mov ah, 9
-    mov al, 38
+    mov ah, 11
+    mov al, 26
     mov bh, 7
     mov bl, cl
     call putcd
-    mov al, 39
+    mov al, 27
     mov bl, ':'
     call putcd
-    mov ah, 9
-    mov al, 40
+    mov ah, 11
+    mov al, 28
     mov bx, cx
     call disp_word_hexd
 .skip:
 
     ; メッセージ関連処理
-    mov al, 0x03
+    mov bx, 0x0000
+    mov dx, 0x0000
     call recv_message
-    jz ._msg_skip
+    jz ._msg_not_me
+    mov cx, ax
+    mov dx, bx
+    mov ah, 11
+    mov al, 18
+    mov bh, 0x07
+    mov bl, '('
+    call putcd
+    
+    mov ah, 11
+    mov al, 19
+    mov bh, 0x07
+    mov bl, ch
+    add bl, '0'
+    call putcd
+    
+    mov ah, 11
+    mov al, 20
+    mov bh, 0x07
+    mov bl, ')'
+    call putcd
+    
+    mov ah, 11
+    mov al, 21
+    mov bx, dx
+    call disp_word_hexd
 
-._msg_skip
+._msg_end:
+._msg_not_me
 
     ; heartbeatの更新
     
@@ -83,7 +110,16 @@ task_body:
 ; 共通ルーチンなど（必要に応じて）
 ;----------------------------------
 recv_message:
+
+    mov al, 0x03
+    call recv_my_msg
+    jz .no_msg
+
+
     ret
+
+.no_msg:
+        ret
 
 get_key:
     push bx

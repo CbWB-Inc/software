@@ -32,70 +32,52 @@ task_body:
 
     call set_own_seg
     
-    mov ah, 13
-    mov al, 30
+    mov ah, 15
+    mov al, 10
     mov bx, ._s_msg
     call disp_strd
 
     call get_tick
     mov bx, ax
-    mov ah, 13
-    mov al, 33
+    mov ah, 15
+    mov al, 13
     call disp_word_hexd
     
 
     ; メッセージ関連処理
     mov bx, 0x0000
     mov dx, 0x0000
-    mov al, 0x05
     call recv_message
     jz ._msg_not_me
     mov cx, ax
     mov dx, bx
-    mov ah, 13
-    mov al, 38
+    mov ah, 15
+    mov al, 18
     mov bh, 0x07
     mov bl, '('
     call putcd
     
-    mov ah, 13
-    mov al, 39
+    mov ah, 15
+    mov al, 19
     mov bh, 0x07
     mov bl, ch
     add bl, '0'
     call putcd
     
-    mov ah, 13
-    mov al, 40
+    mov ah, 15
+    mov al, 20
     mov bh, 0x07
     mov bl, ')'
     call putcd
     
-    mov ah, 13
-    mov al, 41
+    mov ah, 15
+    mov al, 21
     mov bx, dx
     call disp_word_hexd
-    jmp ._msg_end
-    
-    mov ah, 13
-    mov al, 46
-    mov bx, cx
-    call disp_word_hexd
-    
-    mov ah, 13
-    mov al, 46
-    mov bx, dx
-    call disp_word_hexd
-    
-    jmp ._msg_end
-    
-._msg_not_me:
-    mov ah, 13
-    mov al, 38
-    mov bx, ._s_not_me
-    call disp_strd
-    
+
 ._msg_end:
+._msg_not_me
+
 
     ; heartbeatの更新
     mov ax, ctx_p_task3_id
@@ -116,7 +98,20 @@ task_body:
 ; 共通ルーチンなど（必要に応じて）
 ;----------------------------------
 recv_message:
+
+    mov al, 0x05
+    call recv_my_msg
+    jz .no_msg
+
+
     ret
+
+.no_msg:
+    
+    ret
+
+._s_msg db 'No message!', 0x00
+
 
 %include "routine_imp.inc"
 

@@ -31,24 +31,51 @@ task_body:
 
     call set_own_seg
     
-    mov ah, 11
-    mov al, 30
+    mov ah, 13
+    mov al, 10
     mov bx, ._s_msg
     call disp_strd
 
     call get_tick
     mov bx, ax
-    mov ah, 11
-    mov al, 33
+    mov ah, 13
+    mov al, 13
     call disp_word_hexd
 
 
     ; メッセージ関連処理
-    mov al, 0x04
+    mov bx, 0x0000
+    mov dx, 0x0000
     call recv_message
-    jz ._msg_skip
+    jz ._msg_not_me
+    mov cx, ax
+    mov dx, bx
+    mov ah, 13
+    mov al, 18
+    mov bh, 0x07
+    mov bl, '('
+    call putcd
+    
+    mov ah, 13
+    mov al, 19
+    mov bh, 0x07
+    mov bl, ch
+    add bl, '0'
+    call putcd
+    
+    mov ah, 13
+    mov al, 20
+    mov bh, 0x07
+    mov bl, ')'
+    call putcd
+    
+    mov ah, 13
+    mov al, 21
+    mov bx, dx
+    call disp_word_hexd
 
-._msg_skip
+._msg_end:
+._msg_not_me
 
 
     ; 疑似故障
@@ -74,7 +101,7 @@ task_body:
 .skip:
     
 
-    ; heartbeatの更新
+   ; heartbeatの更新
     mov ax, ctx_p_task2_id
     call set_ctx_heartbeat
     
@@ -96,7 +123,16 @@ task_body:
 ; 共通ルーチンなど（必要に応じて）
 ;----------------------------------
 recv_message:
+
+    mov al, 0x04
+    call recv_my_msg
+    jz .no_msg
+
+
     ret
+
+.no_msg:
+        ret
 
 
 %include "routine_imp.inc"

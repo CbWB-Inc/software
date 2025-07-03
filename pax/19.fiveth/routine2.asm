@@ -267,14 +267,6 @@ disp_word_hexd:
     
     ret
 
-
-;key_buf_seg  		equ 0x9a00
-;key_buf_head_ofs 	equ 0x0000
-;key_buf_tail_ofs 	equ 0x0002
-;key_buf_data_ofs 	equ 0x0004
-;key_buf_len  		equ 256
-
-
 set_ctx_heartbeat:
     push bx
     push cx
@@ -420,36 +412,46 @@ send_msg:
     push cx
     push dx
 
-    mov ax, msgq_seg
-    mov ds, ax
-    mov es, ax
+    mov cx, msgq_seg
+    mov ds, cx
+    mov es, cx
 
     mov [.data], bx
     mov cx, [es:msgq_head_ofs]
-    mov dx, [es:msgq_tail_ofs]
+    mov bx, [es:msgq_tail_ofs]
 
-    ; 次のheadを仮計算
-    mov si, cx
-    inc si
-    cmp si, msgq_len
-    jb .no_wrap
-    xor si, si
-.no_wrap:
-
-    ; tailとぶつかる＝満杯
-    cmp si, dx
-    je .full
-
+    
+    ; 書き込み位置を計算
+    ;inc cx
+    mov dx, cx
+    add cx, msgq_entry_size
+    cmp cx, msgq_len
+    jb .no_rap
+    mov dx, 0
+.no_rap:
+    ;mov dx, dx
+    mov cx, dx
+    add cx, msgq_entry_size
+    cmp cx, bx
+    jbe .ok
+    cmp dx, bx
+    jbe .full
+.ok:
+    mov si, [es:msgq_head_ofs]
+    
     ; 書き込み位置
-    imul bx, msgq_entry_size
-    add bx, msgq_data_ofs
     mov cx, [.data]
     
-    mov [es:bx], al         ; 宛先ID
-    mov [es:bx+1], ah       ; 送信元ID
-    mov [es:bx+2], cx       ; データ
+    mov [es:si + msgq_data_ofs], al         ; 宛先ID
+    mov [es:si + msgq_data_ofs + 1], ah     ; 送信元ID
+    mov [es:si + msgq_data_ofs + 2], cx     ; データ
 
     ; head更新
+    add si, msgq_entry_size
+    cmp si, msgq_len
+    jb .skip
+    mov si, 0
+.skip:
     mov [es:msgq_head_ofs], si
     clc
     pop dx
@@ -478,30 +480,60 @@ send_msg:
 ; 出力: ZF=0 → AH=送信元ID, BX=データ
 ;********************************
 recv_my_msg:
+
     push ds
     push es
     push si
     push di
     push cx
     push dx
+    
+    mov cx, msgq_seg
+    mov ds, cx
+    mov es, cx
 
-    mov ax, msgq_seg
-    mov ds, ax
-    mov es, ax
+    mov bx, [es:msgq_head_ofs]
+    mov cx, [es:msgq_tail_ofs]
+    mov dx, cx
 
-    mov si, [es:msgq_tail_ofs]
-    cmp si, [es:msgq_head_ofs]
+    ; データの読み込み位置の特定
+    add cx, msgq_entry_size
+    cmp cx, msgq_len
+    jb .skip
+    mov cx, 0
+.skip:
+    cmp cx, bx
     je .no_msg
 
-    imul si, msgq_entry_size
+    mov si, cx
     add si, msgq_data_ofs
 
+    
+    ;push ax
+    ;push bx
+    
+    ;mov ah, 1
+    ;mov al, 0
+    ;mov bx, [es:si]
+    ;call disp_word_hexd
+    
+    ;mov ah, 1
+    ;mov al, 5
+    ;mov bx, [es:si + 2]
+    ;call disp_word_hexd
+    
+    ;pop bx
+    ;pop ax
+    
+    
     mov dl, [es:si]       ; 宛先
     cmp dl, al
     jne .no_msg
 
+    mov al, dl
     mov ah, [es:si+1]     ; 送信元ID
     mov bx, [es:si+2]     ; データ
+
 
     ; クリア
     mov byte [es:si], 0
@@ -509,13 +541,7 @@ recv_my_msg:
     mov word [es:si+2], 0
 
     ; tail更新
-    mov di, [es:msgq_tail_ofs]
-    inc di
-    cmp di, msgq_len
-    jb .ok
-    xor di, di
-.ok:
-    mov [es:msgq_tail_ofs], di
+    mov [es:msgq_tail_ofs], cx
 
     clc
     pop dx
@@ -524,14 +550,37 @@ recv_my_msg:
     pop si
     pop es
     pop ds
+
+    push ax
+    push bx
+    push cx
+    push dx
+    
+    mov cx, ax
+    mov dx, bx
+    
+    mov ah, 1
+    mov al, 10
+    mov bx, ax
+    call disp_word_hexd
+    
+    mov ah, 1
+    mov al, 15
+    mov bx, dx
+    call disp_word_hexd
+    
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
     ret
 
 .no_msg:
     stc
-    mov ah, 17
-    mov al, 10
-    mov bx, ._s_no_msg
-    call disp_strd
+    
+    mov ax, 0x0000
+    mov bx, 0x0000
     
     pop dx
     pop cx
@@ -539,10 +588,8 @@ recv_my_msg:
     pop si
     pop es
     pop ds
+
     ret
-
-
-._s_no_msg db '---- ----', 0x00
 
 ;********************************
 ; データ領域
