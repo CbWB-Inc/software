@@ -1,5 +1,8 @@
 ; routine.inc
 
+global set_seed
+global xorshift16
+
 global disp_str
 global disp_nl
 global putc
@@ -13,7 +16,7 @@ global set_cursor_pos
 ;global putcd
 global get_key_b
 global power_off
-global str_len
+;global str_len
 global ucase
 global lcase
 global str_cmp

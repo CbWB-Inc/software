@@ -53,9 +53,74 @@ setup:
     
     call set_own_seg
 
-    mov ax, cs
-    mov ds, ax
-    
+    ; mov ax, ._s_msg12   ; 最初のトークン
+    ; call str_len
+    ; mov [._len], bx
+    ; mov bx, ._s_msg4
+    ; call in_str
+    ; mov [._sep_pos], cx
+    ; mov ax, ._s_msg12
+    ; mov bx, 0
+    ; mov cx, [._sep_pos]
+    ; mov dx, ._s_msg
+    ; call sub_str
+
+    ; mov ax, ._s_msg12   ; 残り
+    ; mov bx, [._sep_pos]
+    ; inc bx
+    ; mov cx, [._len]
+    ; mov dx, ._s_msg2
+    ; call sub_str
+
+    ; mov ax, ._s_msg2    ; 2番目のトークン
+    ; call str_len
+    ; mov [._len], bx
+    ; mov bx, ._s_msg4
+    ; call in_str
+    ; mov [._sep_pos], cx
+    ; mov ax, ._s_msg2
+    ; mov bx, 0
+    ; mov cx, [._sep_pos]
+    ; mov dx, ._s_msg3
+    ; call sub_str
+
+    ; mov ax, ._s_msg2    ; 残り（最後のトークン）
+    ; mov bx, [._sep_pos]
+    ; inc bx
+    ; mov cx, [._len]
+    ; mov dx, ._s_msg4
+    ; call sub_str
+
+
+    ; call get_cursor_pos
+    ; inc ah
+    ; mov bx, ._s_msg
+    ; call disp_strd
+    ; call set_cursor_pos
+
+    ; call get_cursor_pos
+    ; inc ah
+    ; mov bx, ._s_msg2
+    ; call disp_strd
+    ; call set_cursor_pos
+
+    ; call get_cursor_pos
+    ; inc ah
+    ; mov bx, ._s_msg3
+    ; call disp_strd
+    ; call set_cursor_pos
+
+    ; call get_cursor_pos
+    ; inc ah
+    ; mov bx, ._s_msg4
+    ; call disp_strd
+    ; call set_cursor_pos
+
+
+
+
+
+
     push 0x0200             ; flags
     push k_task_seg         ; segment
     push 0x0000             ; offset
@@ -69,8 +134,43 @@ setup:
 
 ._s_msg db 'executed!' , 0x00
 ._s_msg2 db '##### end #####' , 0x00
-._s_msg3 db '!' , 0x00
+._s_msg3 db '!        ' , 0x00
+._s_msg4 db ' ', 0x00
+._s_msg5 db 'HELP', 0x00
+._s_msg6 db 'help', 0x00
+._s_msg7 db 'az', 0x00
+._s_msg8 db 'a', 0x00
+._s_msg9 db 'A', 0x00
+._s_msg10 db 'A  ', 0x00
+._s_msg11 db '  A', 0x00
+._s_msg12 db 'aaa bbb ccc', 0x00
+._len dw 0
+._sep_pos dw 0
 
+foo:
+    push ax
+    ;push si
+    
+    mov si, ax
+._loop:
+    mov al, [si]
+    ;or al, al
+    ;jz ._exit
+    ;cmp al, 0x61
+    ;jb ._skip
+    ;cmp al, 0x7a
+    ;ja ._skip
+    sub al, 0x20
+    mov [si], al
+    ;inc si
+._skip:
+    ;jmp ._loop
+
+._exit:
+    ;pop si
+    pop ax
+    
+    ret
 
 init_env:
     call set_own_seg
@@ -98,6 +198,14 @@ init_env:
     call get_tick
     call set_seed
     
+    mov ah, 0x03
+    mov al, 0b110111      ; 1秒ディレイ、低速リピート
+    int 0x16
+    
+    mov ah, 16
+    mov al, 0
+    call set_cursor_pos
+
     ret
 
 
@@ -181,7 +289,7 @@ init_ctx_k_task:
     mov [si + context_cs], ax
     mov ax, 0x0200     ; 適当な flags（IF=1にしてもよい）
     mov [si + context_flags], ax    
-    mov ax, 0x0001     ; 
+    mov ax, ctx_k_task_id     ; 
     mov [si + context_id], ax    
     
     ; ctx_child1 初期化
@@ -208,7 +316,7 @@ init_ctx_d_task:
     mov [si + context_cs], ax
     mov ax, 0x0200     ; 適当な flags（IF=1にしてもよい）
     mov [si + context_flags], ax    
-    mov ax, 0x0002     ; 
+    mov ax, ctx_d_task_id     ; 
     mov [si + context_id], ax    
     
     ; ctx_child2 初期化
@@ -235,7 +343,7 @@ init_ctx_p_task1:
     mov [si + context_cs], ax
     mov ax, 0x0200     ; 適当な flags（IF=1にしてもよい）
     mov [si + context_flags], ax    
-    mov ax, 0x0003     ; 
+    mov ax, ctx_p_task1_id     ; 
     mov [si + context_id], ax    
     
     ; ctx_child2 初期化
@@ -262,7 +370,7 @@ init_ctx_p_task2:
     mov [si + context_cs], ax
     mov ax, 0x0200     ; 適当な flags（IF=1にしてもよい）
     mov [si + context_flags], ax    
-    mov ax, 0x0004    ; 
+    mov ax, ctx_p_task2_id    ; 
     mov [si + context_id], ax    
     
     ; ctx_child2 初期化
@@ -289,7 +397,7 @@ init_ctx_p_task3:
     mov [si + context_cs], ax
     mov ax, 0x0200     ; 適当な flags（IF=1にしてもよい）
     mov [si + context_flags], ax    
-    mov ax, 0x0005     ; 
+    mov ax, ctx_p_task3_id     ; 
     mov [si + context_id], ax    
     
     ; ctx_child2 初期化
@@ -913,11 +1021,11 @@ p_task3_seg    equ 0x5000
 
 ctx_k_task_sp equ 0x7000
 
-k_task_sector  equ 12       ; 子1はセクタ19から読み込む
-d_task_sector  equ 29      ; 子2はセクタ14から読み込む
-p_task1_sector  equ 38      ; 子3はセクタ18から読み込む
-p_task2_sector  equ 47      ; 子3はセクタ22から読み込む
-p_task3_sector  equ 56      ; 子3はセクタ26から読み込む
+k_task_sector  equ 13       ; 子1はセクタ19から読み込む
+d_task_sector  equ 30      ; 子2はセクタ14から読み込む
+p_task1_sector  equ 39      ; 子3はセクタ18から読み込む
+p_task2_sector  equ 48      ; 子3はセクタ22から読み込む
+p_task3_sector  equ 57      ; 子3はセクタ26から読み込む
 
 
 irq0_vector    equ 0x20

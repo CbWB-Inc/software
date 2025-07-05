@@ -3,6 +3,62 @@ section .text
 ;%include "routine_imp.inc"
 %include "routine_exp.inc"
 
+;--------------------------------------
+; 乱数関連
+;--------------------------------------
+;--------------------------------------
+; set_seed
+; - AX に与えた値を rng_state に設定
+;--------------------------------------
+set_seed:
+    mov [rng_state], ax
+    ret
+
+;--------------------------------------
+; xorshift16
+; - 16bitの乱数を生成
+; - 出力: AX に乱数値
+; - 使用レジスタ: DX
+;--------------------------------------
+xorshift16:
+
+    push dx
+
+    mov ax, [rng_state] ; 現在の状態をAXに
+
+    ; Xorshiftステップ: xor-shift-right 7
+    mov dx, ax
+    shr dx, 7
+    xor ax, dx
+
+    ; Xorshiftステップ: xor-shift-left 9
+    mov dx, ax
+    shl dx, 9
+    xor ax, dx
+
+    ; Xorshiftステップ: xor-shift-right 13
+    mov dx, ax
+    shr dx, 13
+    xor ax, dx
+    
+    ;cmp ax, 0x0008
+    ;jne .exit
+    ;inc ax
+    ;jmp .exit
+    ;cmp ax, 0xffff
+    ;jne .exit
+    ;dec ax
+
+.exit:
+    ; 結果を保存
+    mov [rng_state], ax
+
+    pop dx
+    ret
+
+rng_state dw 0xACE1  ; 初期シード（非ゼロ）
+
+
 ;********************************
 ; disp_str
 ;       display null-terminated string.
@@ -474,16 +530,11 @@ power_off:
 ; str_len
 ;       ゼロターミネートされた文字列の長さを求める
 ; param   : ax : 文字列のアドレス
-;           bx : セグメント
-; returen ; cx : 文字列の長さ
+; returen : bx : 文字列の長さ
 ;********************************
-str_len:
+str_len2:
     push ax
-    push bx
     push si
-
-    mov es, bx
-    mov ds, bx
 
     mov si, ax
     mov bx, 0
@@ -498,10 +549,11 @@ str_len:
 ._exit_loop:
 
     pop si
-    pop bx
     pop ax
 
     ret
+
+
 
 ;********************************
 ; ucase
@@ -510,12 +562,10 @@ str_len:
 ; return: 
 ;********************************
 ucase:
+    push ax
     push ds
     push es
     push si
-    
-    mov es, bx
-    mov ds, bx
     
     mov si, ax
     mov di, ax
@@ -524,9 +574,9 @@ ucase:
     or al, al
     jz ._exit
     cmp al, 0x61
-    js ._skip
+    jb ._skip
     cmp al, 0x7a
-    jg ._skip
+    ja ._skip
     sub al, 0x20
     stosb
 ._skip:
@@ -536,6 +586,7 @@ ucase:
     pop si
     pop es
     pop ds
+    pop ax
     
     ret
 
@@ -546,13 +597,11 @@ ucase:
 ; return: 
 ;********************************
 lcase:
+    push ax
     push ds
     push es
     push si
     
-    mov es, bx
-    mov ds, bx
-
     mov si, ax
     mov di, ax
 ._loop:
@@ -560,9 +609,9 @@ lcase:
     or al, al
     jz ._exit
     cmp al, 0x41
-    js ._skip
+    jb ._skip
     cmp al, 0x5a
-    jg ._skip
+    ja ._skip
     add al, 0x20
     stosb
 ._skip:
@@ -572,14 +621,16 @@ lcase:
     pop si
     pop es
     pop ds
+    pop ax
     
     ret
 
+
 ;********************************
 ; str_cmp
-;       文字列を比較する
+;       文字列を比較する。
 ; param : ax, bx
-; return: cl
+; return: cl : 同じ=0
 ;********************************
 str_cmp:
     push ax

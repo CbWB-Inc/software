@@ -1,3 +1,393 @@
+; in_str
+; ax = pointer to target string (haystack)
+; bx = pointer to search string (needle)
+; return:
+;   cx = index if found
+;   ZF = 0 if found, ZF = 1 if not found
+in_str:
+    push si
+    push di
+    push dx
+
+    mov si, ax      ; si = haystack
+    mov di, bx      ; di = needle
+    xor cx, cx      ; index counter
+    cld             ; 確実に前方比較
+
+.next_pos:
+    push si         ; 検索開始位置保存
+    push di         ; needle開始位置保存
+
+    mov dx, si      ; dx = 比較用先頭位置
+
+.compare_loop:
+    lodsb           ; al = [si++]（haystack）
+    scasb           ; compare al with [di++]（needle）
+    jne .mismatch
+    cmp al, 0       ; needle が終端？
+    je .found       ; needle 末尾到達 = 完全一致
+
+    cmp byte [di], 0
+    jne .compare_loop
+
+.found:
+    pop di
+    pop si
+    clc             ; ZFクリア＝成功
+    jmp .done
+
+.mismatch:
+    pop di
+    pop si
+    inc cx
+    mov si, dx
+    cmp byte [si], 0
+    je .not_found
+    inc si
+    jmp .next_pos
+
+.not_found:
+    stc             ; エラー状態（ZF=1にするため）
+    or cx, 0        ; 何もしないがZFを立てるため
+    jmp .done
+
+.done:
+    pop dx
+    pop di
+    pop si
+    ret
+
+;********************************
+; sub_str
+;       文字列の一部を返す
+; param : ax:文字列
+;         bx:スタート位置（ゼロオリ）
+;         cx:エンド位置（ゼロオリ）
+; return: dx:切り出した文字列
+;********************************
+sub_str:
+    push ax
+    push bx
+    push cx
+    push si
+    push di
+
+    cmp bx, cx
+    jb ._skip
+    mov cx, bx
+._skip:
+
+    mov si, ax
+    mov di, dx
+    add si, bx
+    sub cx, bx
+
+._loop:
+    cmp byte [si], 0x00
+    je ._exit_loop
+    cmp cx, 0x00
+    je ._exit_loop
+    mov bx, [si]
+    mov [di], bx
+    inc si
+    inc di
+    dec cx
+    jmp ._loop
+._exit_loop:
+    inc di
+    mov byte [di], 0x00
+
+    pop di
+    pop si
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+
+;********************************
+; right_str
+;       右から指定文字数の文字列を返す
+; param : ax:文字列
+;         bx:文字数
+; return: cx:
+;********************************
+right_str:
+    push ax
+    push bx
+    push dx
+    push si
+    push di
+
+    mov si, ax
+    mov di, cx
+
+    push ds
+    pop es
+
+    mov dx, bx
+    call str_len
+    cmp dx, bx
+    jb ._skip
+    mov dx, bx
+._skip:
+    sub bx, dx
+    add si, bx
+    mov bx, dx
+
+._loop:
+    cmp byte [si], 0x00
+    je ._exit_loop
+    cmp bx, 0x00
+    jz ._exit_loop
+    mov dl, [si]
+    mov [di], dl
+    inc si
+    inc di
+    dec bx
+    jmp ._loop
+
+._exit_loop:
+    mov byte [di], 0x00
+
+    pop di
+    pop si
+    pop dx
+    pop bx
+    pop ax
+
+    ret
+
+
+;********************************
+; left_str
+;       左から指定文字数の文字列を返す
+; param : ax:文字列
+;         bx:文字数
+; return: cx:
+;********************************
+left_str:
+    push ax
+    push bx
+    push dx
+    push si
+    push di
+
+    mov si, ax
+    mov di, cx
+
+    push ds
+    pop es
+
+    mov dx, bx
+    call str_len
+    cmp dx, bx
+    jb ._skip
+    mov dx, bx
+._skip:
+    mov bx, dx
+
+._loop:
+    cmp byte [si], 0x00
+    je ._exit_loop
+    cmp bx, 0x00
+    jz ._exit_loop
+    mov dl, [si]
+    mov [di], dl
+    inc si
+    inc di
+    dec bx
+    jmp ._loop
+
+._exit_loop:
+    mov byte [di], 0x00
+
+    pop di
+    pop si
+    pop dx
+    pop bx
+    pop ax
+
+    ret
+
+
+;********************************
+; str_len
+;       文字列の長さを返す
+; param : ax
+; return: bx
+;********************************
+str_len:
+    push ax
+    push si
+
+    mov si, ax
+    mov bx, 0
+
+._loop:
+    cmp byte [si], 0x00
+    je ._exit_loop
+    inc si
+    inc bx
+    jmp ._loop
+
+._exit_loop:
+
+    pop si
+    pop ax
+
+    ret
+
+; ltrim
+; ax = pointer to null-terminated string
+; return:
+;   ax = pointer to first non-space character
+
+ltrim:
+    push si
+
+    mov si, ax
+.ltrim_loop:
+    cmp byte [si], 0x20  ; space?
+    jne .done
+    inc si
+    jmp .ltrim_loop
+
+.done:
+    mov ax, si           ; 新しい先頭を返す
+    pop si
+    ret
+
+
+; rtrim
+; ax = pointer to null-terminated string
+; modifies string in-place:
+;   最後の非スペースの次の位置に 0 を書き込む
+
+rtrim:
+    push si
+    push di
+
+    mov si, ax
+.find_end:
+    cmp byte [si], 0
+    je .scan_back
+    inc si
+    jmp .find_end
+
+.scan_back:
+    dec si              ; null の手前から逆に走査
+.scan_loop:
+    cmp si, ax          ; 文字列先頭まで来たら終わり
+    jb .all_spaces      ; すべて空白だった
+    cmp byte [si], 0x20
+    jne .found_end
+    dec si
+    jmp .scan_loop
+
+.all_spaces:
+    push si
+    mov si, ax
+    mov byte [si], 0    ; 全部スペースなら空文字に
+    pop si
+    jmp .done
+
+.found_end:
+    inc si              ; 非スペースの直後を終端に
+    mov byte [si], 0
+.done:
+    pop di
+    pop si
+    ret
+
+;********************************
+; rtrim
+;       文字列の右側の空白を外す
+; param : ax
+; return: ax
+;********************************
+ rtrim2:
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+
+    call str_len
+    mov dx, bx
+
+    mov si, ax
+    mov cx, 0
+._loop1:
+    cmp byte [si], 0x00
+    je ._exit_loop1
+    cmp byte [si], ' '
+    je ._skip1
+    mov [._w_last_pos], cx
+._skip1:
+    inc si
+    inc cx
+    jmp ._loop1
+._exit_loop1:
+
+    mov si, ax
+    mov di, ._s_tmp_buf
+    mov cx, [._w_last_pos]
+._loop2:
+    cmp cx, 0x00
+    je ._exit_loop2
+    mov al, [si]
+    mov [di], al
+    inc si
+    inc di
+    dec cx
+    jmp ._loop2
+._exit_loop2:
+    mov cl, 0x00
+    mov [di], cl
+
+    mov si, ._s_tmp_buf
+    mov di, ax
+._loop3:
+    cmp byte [si], 0x00
+    je ._exit_loop3
+    mov al, [si]
+    mov [di], al
+    inc si
+    inc di
+    jmp ._loop3
+._exit_loop3:
+    mov cl, 0x00
+    mov [di], cl
+
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
+
+    ret
+
+ ._w_last_pos dw 0
+ ._s_tmp_buf times 128 db 0
+
+str_cpy:
+    mov si, ax
+    mov di, bx
+._loop:
+    cmp byte [si], 0x00
+    je ._exit_loop
+    mov al, [si]
+    mov [di], al
+    inc si
+    inc di
+    jmp ._loop
+._exit_loop:
+    
+    
+    ret
+
+
 ;********************************
 ; cls
 ;       テキストをクリアする
@@ -96,73 +486,6 @@ putcd:
 ;         bx:文字列のアドレス
 ; return: 
 ;********************************
-disp_strd2:
-    push ax
-    push bx
-    push cx
-    push dx
-    push si
-    push ds
-    push es
-
-    call set_own_seg
-
-    mov cx, 0xb800
-    mov es, cx
-     
-    mov si, bx
-    mov cx, ax
-
-    mov [.x], ah
-    mov [.y], al
-
-.loop:
-    lodsb
-    cmp al, 0x00
-    je .exit
-    
-    mov bh, 0x07
-    mov bl, al
-    mov cx, bx
-
-    mov al, [.x]
-    mov ah, 0x00
-    
-    mov dx, 0x0000
-    mov bx, 0x0005
-    shl ax, 5
-    mul bx
-    
-    mov bl, [.y]
-    mov bh, 0x00
-    shl bx, 1
-
-    add ax, bx
-    
-    mov bx, ax
-    mov word [es:bx], cx
-
-    mov cx, [.y]
-    inc cx
-    mov [.y], cx
-    
-    jmp .loop
-
-.exit:
-    
-    pop es
-    pop ds
-    pop si
-    pop dx
-    pop cx
-    pop bx
-    pop ax
-    ret
-
-.y: db 0
-.x: db 0
-
-
 disp_strd:
     push ax
     push bx
@@ -328,61 +651,6 @@ dead_or_alive:
     ret
     
 
-
-;--------------------------------------
-; 乱数関連
-;--------------------------------------
-;--------------------------------------
-; set_seed
-; - AX に与えた値を rng_state に設定
-;--------------------------------------
-set_seed:
-    mov [rng_state], ax
-    ret
-
-;--------------------------------------
-; xorshift16
-; - 16bitの乱数を生成
-; - 出力: AX に乱数値
-; - 使用レジスタ: DX
-;--------------------------------------
-xorshift16:
-
-    push dx
-
-    mov ax, [rng_state] ; 現在の状態をAXに
-
-    ; Xorshiftステップ: xor-shift-right 7
-    mov dx, ax
-    shr dx, 7
-    xor ax, dx
-
-    ; Xorshiftステップ: xor-shift-left 9
-    mov dx, ax
-    shl dx, 9
-    xor ax, dx
-
-    ; Xorshiftステップ: xor-shift-right 13
-    mov dx, ax
-    shr dx, 13
-    xor ax, dx
-    
-    ;cmp ax, 0x0008
-    ;jne .exit
-    ;inc ax
-    ;jmp .exit
-    ;cmp ax, 0xffff
-    ;jne .exit
-    ;dec ax
-
-.exit:
-    ; 結果を保存
-    mov [rng_state], ax
-
-    pop dx
-    ret
-
-rng_state dw 0xACE1  ; 初期シード（非ゼロ）
 
 _wait:
     cmp ax, 0x0000

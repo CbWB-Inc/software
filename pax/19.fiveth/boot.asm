@@ -18,7 +18,7 @@ start:
     mov bx, 0x0000
 
     mov ah, 0x02          ; int 13h: read sector(s)
-    mov al, 10            ; 読むセクタ数 = 1
+    mov al, 11            ; 読むセクタ数 = 1
     mov ch, 0             ; cylinder = 0
     mov cl, 2             ; sector = 2（LBA=1）
     mov dh, 0             ; head = 0

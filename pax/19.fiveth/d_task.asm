@@ -14,9 +14,9 @@ setup:
     mov ds, ax
     mov es, ax
     ;call cls
-    mov ah, 0x0
-    mov al, 0x0
-    call set_cursor_pos
+    ;mov ah, 0x0
+    ;mov al, 0x0
+    ;call set_cursor_pos
     
 start:
     sti

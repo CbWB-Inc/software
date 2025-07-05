@@ -1,5 +1,8 @@
 ; routine.inc
 
+extern set_seed
+extern xorshift16
+
 extern disp_str
 extern disp_nl
 extern putc
@@ -13,7 +16,7 @@ extern set_cursor_pos
 ;extern putcd
 extern get_key_b
 extern power_off
-extern str_len
+;extern str_len
 extern ucase
 extern lcase
 extern str_cmp
