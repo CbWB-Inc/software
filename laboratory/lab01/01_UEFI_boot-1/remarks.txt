@@ -1,0 +1,65 @@
+🎯 目標（最小構成）
+    **UEFIブートローダ（EFIアプリ）**が起動し
+    メモリに**カーネル（ELFではなくフラットバイナリ）**をロードし
+    jmp far 0x1000:0x0000 のような形でリアルモードで実行開始
+
+🛠 構成イメージ
+    bootdisk/
+    ├── EFI/
+    │   └── BOOT/
+    │       └── BOOTX64.EFI   ← ブートローダ（UEFIアプリ）
+    ├── kernel.bin            ← リアルモード想定の最小カーネル（フラットバイナリ）
+
+
+✅ やることステップ
+    UEFIアプリ（main.c）
+        efi_mainでファイルkernel.binを読み込み
+        メモリへロード（たとえば0x10000など）
+        __asm__("jmp far ...") で制御を渡す（inline asm）
+    kernel.bin（
+        起動するだけ。何もしない。
+    Makefile構成
+        BOOTX64.EFI作成
+        make run で qemu + ovmf + fat:rw:bootdisk 起動
+
+💡注意
+    EXIT_BOOT_SERVICES をコールしないとメモリなどが保護されたまま。
+    ページングが必要になる場合があるが、今回は最小構成の成功体験を優先。
+
+
+<Remarks timestamp="2025年7月11日 0:08:29"/>
+
+✅ 目標
+  UEFIアプリ（BOOTX64.EFI）が起動
+  kernel.bin（フラットバイナリ）をロード
+  ExitBootServicesを呼んで、リアルモード（または仮想86モード）で kernel.bin に制御を渡す
+  kernel.bin が起動
+
+📁 ディレクトリ構成（例）
+  uefi_boot/
+  ├── Makefile
+  ├── main.c                  ← UEFIエントリ
+  ├── kernelc                 ← kernel
+  ├── bootdisk/
+  │   └── EFI/
+  │       └── BOOT/
+  │           └── BOOTX64.EFI ← ビルド後コピーされる
+
+
+
+
+<Remarks timestamp="2025年8月28日 12:25:38"/>
+
+使ってないやつを消してすっきり
+
+<Remarks timestamp="2025年8月29日 21:35:44"/>
+Makefileのライブラリ系を整理。標準に任せる方向
+いらないファイル等を整理
+ソースも整理
+
+<Remarks timestamp="2025年8月30日 19:00:24"/>
+
+UEFIでブートしてkernelへ処理を移行させるところまで。
+kernelは空。何もしていない。
+
+
