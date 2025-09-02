@@ -1,0 +1,44 @@
+<Remarks timestamp="2025年7月11日 0:08:29"/>
+
+<Remarks timestamp="2025年8月28日 12:25:38"/>
+
+使ってないやつを消してすっきり
+
+<Remarks timestamp="2025年8月29日 21:35:44"/>
+Makefileのライブラリ系を整理。標準に任せる方向
+いらないファイル等を整理
+ソースも整理
+
+<Remarks timestamp="2025年8月29日 23:36:38"/>
+このままでは何もできないので
+とりあえずログを出力できるように。
+
+<Remarks timestamp="2025年8月30日 0:17:30"/>
+memmapを表示してみる。
+いつかはすべてを自由にしたいものだけど
+今のところ安全に使えそうなのは以下。
+UEFI BIOSが未使用だった領域。
+
+Memory map:
+Memory map:
+Usable: 0x2000 - 0xA0000 (0x9E pages)
+Usable: 0x104000 - 0x800000 (0x6FC pages)
+Usable: 0x808000 - 0x80B000 (0x3 pages)
+Usable: 0x80C000 - 0x811000 (0x5 pages)
+Usable: 0x1780000 - 0x3BB6C000 (0x3A3EC pages)
+Usable: 0x3BB8C000 - 0x3E003000 (0x2477 pages)
+Usable: 0x3E035000 - 0x3E041000 (0xC pages)
+Usable: 0x3FE00000 - 0x3FE6F000 (0x6F pages)
+
+
+Usable: 0x1780000 - 0x3BB6C000 (0x3A3EC pages)が最大の空き
+Usable: 0x3BB8C000 - 0x3E003000 (0x2477 pages)次がこれ
+
+最大の空きをメインのメモリとして使用
+2番目の空きをページマップ領域およびシステムで使う領域に使用
+そんな感じで大雑把に使用していこうと思います。
+
+<Remarks timestamp="2025年8月30日 19:02:50"/>
+例外があがると問答無用で落ちてしまうので
+落ちずに情報を得られるように。
+
