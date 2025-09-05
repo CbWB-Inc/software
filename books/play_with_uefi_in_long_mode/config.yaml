@@ -4,5 +4,5 @@ topics: ["amd64", "uefi", "boot"]   # トピック（5つまで）
 published: false                    # falseだと下書き
 price: 200                          # 有料の場合200〜5000
 chapters:
-  - UEFIブートで遊ぼっ！            # チャプター1
-  - UEFIブートで遊ぼっ！（２）      # チャプター2
+  - 01_uefi_boot-1                  # チャプター1
+  - 02_uefi_boot-2                  # チャプター2
