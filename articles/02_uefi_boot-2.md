@@ -39,5 +39,4 @@ log_initで初期化してから使います。
 
 
 #### 公開場所
-laboratory/lab01/02_UEFI_boot-2
-
+https://github.com/CbWB-Inc/software/tree/main/laboratory/lab01/02_UEFI_boot-2
