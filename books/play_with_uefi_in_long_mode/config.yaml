@@ -1,0 +1,8 @@
+title: "ロングモードで遊ぼっ！"
+summary: "x86_64のロングモードで遊んだ記録です"
+topics: ["amd64", "uefi", "boot"]   # トピック（5つまで）
+published: false                    # falseだと下書き
+price: 200                          # 有料の場合200〜5000
+chapters:
+  - UEFIブートで遊ぼっ！            # チャプター1
+  - UEFIブートで遊ぼっ！（２）      # チャプター2
