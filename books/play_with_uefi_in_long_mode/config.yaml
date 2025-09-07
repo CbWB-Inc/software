@@ -6,3 +6,4 @@ price: 200                          # 有料の場合200〜5000
 chapters:
   - 01_uefi_boot-1                  # チャプター1
   - 02_uefi_boot-2                  # チャプター2
+  - 03_uefi_boot-3                  # チャプター3
