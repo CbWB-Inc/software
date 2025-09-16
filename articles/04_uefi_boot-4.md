@@ -25,4 +25,4 @@ published: false                    # 公開設定（falseにすると下書き�
 
 
 #### 公開場所
-https://github.com/CbWB-Inc/software/tree/main/laboratory/lab01/03_UEFI_boot-4
+https://github.com/CbWB-Inc/software/tree/main/laboratory/lab01/04_UEFI_boot-4
