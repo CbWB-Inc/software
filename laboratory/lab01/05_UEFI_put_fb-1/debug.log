@@ -1,0 +1,11 @@
+virtual memory mapping
+Starting paging initialization...
+rsp : 3FE8E5B0
+mapped yes
+finish paging initialization
+setup gdt
+setup tss
+setup idt
+
+kernel initialize complete
+
