@@ -8,4 +8,4 @@ chapters:
   - 02_uefi_boot-2                  # チャプター2
   - 03_uefi_boot-3                  # チャプター3
   - 04_uefi_boot-4                  # チャプター4
-  - 05_UEFI_put_fb-1                # チャプター5
+  - 05_uefi_put_fb-1                # チャプター5
