@@ -21,4 +21,4 @@ published: false                    # 公開設定（falseにすると下書き�
 
 
 #### 公開場所
-https://github.com/CbWB-Inc/software/tree/main/laboratory/lab01/05_UEFI_put_fb-2
+https://github.com/CbWB-Inc/software/tree/main/laboratory/lab01/06_UEFI_put_fb-2

@@ -24,4 +24,4 @@ IRQ1によるキーボード割り込みです。
 
 
 #### 公開場所
-https://github.com/CbWB-Inc/software/tree/main/laboratory/lab01/05_UEFI_keyin-1
+https://github.com/CbWB-Inc/software/tree/main/laboratory/lab01/07_UEFI_keyin-1
