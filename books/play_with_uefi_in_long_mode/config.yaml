@@ -2,7 +2,7 @@ title: "ロングモードで遊ぼっ！"
 summary: "x86_64のロングモードで遊んだ記録です"
 topics: ["amd64", "uefi", "boot"]   # トピック（5つまで）
 published: false                    # falseだと下書き
-price: 200                          # 有料の場合200〜5000
+price: 400                          # 有料の場合200〜5000
 chapters:
   - 01_uefi_boot-1                  # チャプター1
   - 02_uefi_boot-2                  # チャプター2
@@ -13,3 +13,4 @@ chapters:
   - 07_uefi_keyin-1                 # チャプター7
   - 08_uefi_keyin-2                 # チャプター8
   - 09_uefi_keyin-3                 # チャプター8
+  - 10_uefi_mouse                   # チャプター9
