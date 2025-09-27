@@ -12,5 +12,6 @@ chapters:
   - 06_uefi_put_fb-2                # チャプター6
   - 07_uefi_keyin-1                 # チャプター7
   - 08_uefi_keyin-2                 # チャプター8
-  - 09_uefi_keyin-3                 # チャプター8
-  - 10_uefi_mouse                   # チャプター9
+  - 09_uefi_keyin-3                 # チャプター9
+  - 10_uefi_mouse                   # チャプター10
+  - 11_uefi_timer-1                 # チャプター11
