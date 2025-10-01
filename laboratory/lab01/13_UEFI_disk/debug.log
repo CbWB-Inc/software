@@ -1,0 +1,49 @@
+virtual memory mapping
+Starting paging initialization...
+rsp : 3FE8E5A0
+mapped yes
+finish paging initialization
+setup gdt
+setup tss
+setup idt
+Fixing segment registers...
+Raw MSR 0x1B value: FEE00900
+LAPIC physical address: FEE00000
+LAPIC already enabled in MSR
+lapic_base set to: FEE00000
+Enabling LAPIC via SVR...
+Reading LAPIC ID...
+LAPIC ID: 0000
+Setting LAPIC TPR to 0...
+Setting up keyboard and mouse interrupt...
+Initializing scheduler...
+=== STARTING SCHEDULER ===
+
+Adding tasks to runqueue...
+RUNQ_CHECK:
+RUNQ_EXISTS: 17C2000
+RUNQ_TASKS:
+  TASK[0]: 17BC000 NAME: task_A KIND: 0 WEIGHT: 3 BUDGET: F
+  TASK[1]: 17BF000 NAME: task_B KIND: 0 WEIGHT: 1 BUDGET: 5
+  TASK[2]: 17C2000 NAME: task_C KIND: 0 WEIGHT: 1 BUDGET: 5
+INITIAL_STATE:
+  current: 17B9000
+  exec_current: 17B9000
+  idle: 17B9000
+=== SCHEDULER STARTED ===
+Starting timer...
+Enabling interrupts...
+
+kernel initialize complete
+
+AHCI PCI found. ABAR=81085000
+AHCI CL=0 CT=0 RFIS=0
+ virt CL=0 CT=0 RFIS=0
+LBA0 sig=AA55
+LBA0 CRC=7E475A04
+AHCI CL=17C5000 CT=17C7000 RFIS=17C9000
+ virt CL=17C5000 CT=17C7000 RFIS=17C9000
+CRC wr=9E3779B9 rd=9E3779B9
+RESTORE crc0=7E475A04 back=7E475A04
+RW test: OK
+aaaaaaaaaaaaaaaaaaa
