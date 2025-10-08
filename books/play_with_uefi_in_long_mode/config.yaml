@@ -18,5 +18,5 @@ chapters:
   - 12_uefi_timer-2                 # チャプター12
   - 13_uefi_disk                    # チャプター13
   - 14_uefi_etc_                    # チャプター14
-  - 14_uefi_demo                    # チャプター15
+  - 15_uefi_demo                    # チャプター15
 
