@@ -66,7 +66,7 @@ hang:
 jmp hang
 
 _change_msg2: db 'All out!', 0x0d, 0x0a, 0x00
-_change_msg3: db 'Pull the throttie!', 0x0d, 0x0a, 0x00
+_change_msg3: db 'Pull the throttle!', 0x0d, 0x0a, 0x00
 _change_msg4: db "All right Let's Go!", 0x0d, 0x0a, 0x00
 
 times 510-($-$$) db 0
@@ -85,6 +85,6 @@ _third_sector:
     times 0x0600-($-$$) db 0
 
 _fourth_sector:
-    db 'Forth Gate Oen!', 0x0d, 0x0a, 0x00
+    db 'Forth Gate Open!', 0x0d, 0x0a, 0x00
 
     times 0x0800 -($-$$) db 0
