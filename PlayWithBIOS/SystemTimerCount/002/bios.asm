@@ -1,13 +1,11 @@
 ;>===========================
-;>      BIOSで遊ぼっ！
+;>	BIOSと戯れてみる
 ;>===========================
 
 section .data
 
-    _c_seg          equ 0x07c0
-    _c_ex_area_addr equ 0x200
-    _c_seg          equ 0x07c0
-    _c_ex_area_addr equ 0x200
+	_c_seg          equ 0x07c0
+	_c_ex_area_addr equ 0x200
 
 section .text
 
@@ -15,11 +13,10 @@ boot:
     ; set segment register
     mov ax, _c_seg
     mov ds, ax
-
-    ; disk read
-
-    mov ax, _c_seg
     mov es, ax
+    
+    ; disk read
+    ;
     mov bx, _c_ex_area_addr
 
     mov ah, 0x02 ; Read Sectors From Drive
@@ -31,136 +28,41 @@ boot:
 
     int 0x13     ; Execute disk read
 
-    ; ビデオモードの設定
-    mov ah, 0x0
-    mov al, 0x3    ; 16色テキスト、80x25
-    int 0x10
-
     jmp main
 
-;********************************
-; ブートセクタ終端までゼロで埋める
-;********************************
+;>****************************
+;> hlt
+;>****************************
+_hlt:
+    hlt
+    jmp _hlt
+
+_m_isTest:       db 0
+
+;>****************************
+;> ブートローダパディング
+;>****************************
 
 times 510-($-$$) db 0
 
 ;********************************
-; ブートセクタシグネチャの書き込み
+; ブートセクタシグネチャ
 ;********************************
 
 db 0x55
 db 0xAA
 
+section .text
 ;>===========================
-;> main
-;>===========================
-
-main:
-
-    ; システムカウンタの取得と表示
-    call SystemCounter
-
-    mov bx, 0xffff
-    mov cx, 0xffff
-    mov dx, 0x000f
-
-._loop1
-._loop2
-._loop3
-    dec bx
-    
-    cmp bx, 0
-    jne ._loop3
-    
-    dec cx
-    or cx, cx
-    jne ._loop2
-    
-    dec dx
-    or dx, dx
-    jne ._loop1
-
-    ; システムカウンタの取得と表示
-    call SystemCounter
-
-    ; 処理終了
-    call _hlt
-
-;>===========================
-;> システムカウンタの取得と表示
-;>===========================
-SystemCounter:
-
-    ; システムカウンタ
-    ; BIOSコールの実行
-    mov ah, 0x00
-    int 0x01a
-
-    ; 以下、結果の表示
-
-    jnc ._cf_nomal
-    ; キャリーが立っていた場合
-    mov ah, 0x01
-    mov [._cf], ah
-
-._cf_nomal:
-    mov [._of], al
-
-    ; CFの表示
-    mov ax, ._s_hdr_cf
-    call disp_str
-    mov al, [._cf]
-    call disp_byte_hex
-    call disp_nl
-
-    ; over fllow の表示
-    mov ax, ._s_hdr_of
-    call disp_str
-    mov al, [._of]
-    call disp_byte_hex
-    call disp_nl
-
-    ; cxの表示
-    mov ax, ._s_hdr_cx
-    call disp_str
-    mov ax, cx
-    call disp_word_hex
-    call disp_nl
-
-    ; dxの表示	
-    mov ax, ._s_hdr_dx
-    call disp_str
-    mov ax, dx
-    call disp_word_hex
-    call disp_nl
-    call disp_nl
-
-    ; 処理終了
-
-    ret
-    
-
-._cf: db 0x00
-._of: db 0x00
-
-._s_hdr_cf: db ' CF        : ', 0x00
-._s_hdr_of: db ' over flow : ', 0x00
-._s_hdr_cx: db ' cx        : ', 0x00
-._s_hdr_dx: db ' dx        : ', 0x00
-._s_crlf:       db 0x0d, 0x0a, 0x00
-
-;>===========================
-;>      サブルーチン
+;> 	サブルーチン
 ;>===========================
 ;********************************
-; bin_nibble_hex
-;       4bit整数を16進文字に変換する（下位4Bit）
+; ch0   4bit整数を16進文字に変換する（下位4Bit）
 ;       0～15 -> '0'～'f'
 ; param  : al : 変換する数値
 ; return : bl : 変換された文字
 ;******************************
-bin_nibble_hex:
-
+ch0:
         and al, 0x0f
         cmp al, 0x09
         ja .gt_9
@@ -174,11 +76,11 @@ bin_nibble_hex:
         ret
 
 ;********************************
-; bin_byte_hex
+; ch1    : 1バイト整数を16進文字に変換する（下位4Bit）
 ; param  : al : 変換したい数値
 ; return : bx : 変換した2文字の16進文字
 ;********************************
-bin_byte_hex:
+ch1:
     push cx
     push dx
 
@@ -186,13 +88,13 @@ bin_byte_hex:
     sar al, 4
     and al, 0x0f
     mov ah, 0
-    call bin_nibble_hex
+    call ch0
     mov dh, bl
 
     mov al, cl
     and al, 0x0f
     mov ah, 0
-    call bin_nibble_hex
+    call ch0
     mov dl, bl
 
     mov bx, dx
@@ -202,16 +104,32 @@ bin_byte_hex:
 
     ret
 
+;****************************
+; pnl
+;   改行する
+;****************************
+pnl:
+    push ax
+
+    mov ax, ._s_crlf
+    call ps
+
+    pop ax
+    
+    ret
+
+._s_crlf
+    db 0x0a, 0x0d, 0x00
+
 ;********************************
-; disp_byte_hex
-;      1バイトの数値を16進で表示する
+; ph1    : 1バイトの数値を16進で表示する
 ; param  : al : 表示したい数値
 ;********************************
-disp_byte_hex:
+ph1:
     push ax
     push bx
 
-    call bin_byte_hex
+    call ch1
     mov ah, 0x0e
     mov al, bh
     int 0x10
@@ -224,21 +142,20 @@ disp_byte_hex:
     ret
 
 ;********************************
-; disp_word_hex
-;       2バイト（1ワード）のデータを表示する
+; ph2   : 2バイト（1ワード）のデータを表示する
+;	（ビッグエンディアン表記）
 ; param : ax : 表示するword
 ;********************************
-disp_word_hex:
-
+ph2:
     push ax
     push bx
 
     mov bx, ax
     mov al, bh
-    call disp_byte_hex
+    call ph1
 
     mov al, bl
-    call disp_byte_hex
+    call ph1
 
 ._end:
 
@@ -248,12 +165,10 @@ disp_word_hex:
     ret
 
 ;********************************
-; disp_str
-;       display null-terminated string.
+; ps    : display null-terminated string.
 ; param : ax : addr of mem where string is set.
 ;********************************
-disp_str:
-
+ps:
     push ax
     push si
 
@@ -273,29 +188,143 @@ disp_str:
 
     ret
 
-;****************************
-; disp_nl
-;   改行する
-;****************************
-disp_nl:
+;>===========================
+;>  BIOSコール 実験コード
+;>===========================
+;********************************
+; system_timer_count_readの確認
+;********************************
+system_timer_count_read:
 
     push ax
+    push bx
 
-    mov ax, _s_crlf
-    call disp_str
+    mov ah, 0x00    ; 読み込みファンクション指定（０固定）
+    int 0x01a       ; システムタイマカウント読み込み
 
+    jnc ._cf_nomal
+    ; 失敗
+    mov ah, 0x01
+
+._cf_nomal:
+    mov [._success], ah
+
+    mov [._of], al
+
+    ; CFの表示
+    mov ax, ._s_hdr_cf
+    call ps
+
+    mov al, [._success]
+    call ph1
+    call pnl
+
+    ; over fllow の表示     : Over Fllowしたか？
+    mov ax, ._s_hdr_of
+    call ps
+    mov al, [._of]
+    call ph1
+    call pnl
+
+    ; cxの表示              : cxxの値表示           
+    mov ax, ._s_hdr_cx
+    call ps
+    mov ax, cx
+    call ph2
+    call pnl
+
+    ; dxの表示	            : dxの値表示           
+    mov ax, ._s_hdr_dx
+    call ps
+    mov ax, dx
+    call ph2
+    call pnl
+    call pnl
+
+    pop bx
     pop ax
 
     ret
 
-_s_crlf:       db 0x0d, 0x0a, 0x00
+._success: db 0x00
+._of:      db 0x00
 
-;>****************************
-;> hlt
-;>****************************
-_hlt:
-    hlt
-    jmp _hlt
+._s_hdr_of: db " over flow : ", 0x00
+._s_hdr_cx: db " cx        : ", 0x00
+._s_hdr_dx: db " dx        : ", 0x00
+._s_hdr_cf: db " success   : ", 0x00
+
+;>===========================
+;> main
+;>===========================
+
+main:
+    ; ビデオモードの設定
+    mov ah, 0x0
+    mov al, 0x3    ; 16色テキスト、80x25
+    ; mov al, 0x6a  ; 800x600x4bitカラー（ビデオカードによってはサポートされない）
+    int 0x10
+
+    ; 念のため初期化
+    cld
+
+;********************************
+;   暫定実行コード：システムカウンタ
+;********************************
+    call pnl
+    mov ax, ._s_hdr_target
+    call ps
+    call pnl
+    mov ax, ._s_hdr_start
+    call ps
+    call exp_system_timer_count_read
+    call pnl
+
+    mov ax, ._s_hdr_process
+    call ps
+
+    mov bx, 0xffff
+    mov cx, 0xffff
+    mov dx, 0x0003
+
+._loop1:                ; 1階層
+._loop2:                ; 2階層
+._loop3:                ; 3階層
+
+    dec bx
+
+    ;or bx, bx           ; 次の行とこの行のどちらかを選ぶ
+    cmp bx, 0
+    ;test bx, bx
+
+    jne ._loop3         ; 3階層底i
+    mov bx, 0xffff
+    
+    dec cx
+    or cx, cx
+    jne ._loop2         ; 2階層底
+    mov cx, 0xffff
+
+    dec dx
+    or dx, dx
+    jne ._loop1         ; 1階層底
+
+    call pnl
+    call pnl
+    mov ax, ._s_hdr_end
+    call ps
+    call exp_system_timer_count_read
+
+    call _hlt
+
+._s_hdr_target: db '### TARGET : cmp bx, 0  ###', 0x0d, 0x0a, 0x00
+;._s_hdr_target: db '### TARGET : or bx, bx ###', 0x0d, 0x0a, 0x00
+;._s_hdr_target: db '### TARGET :test bx, bx ###', 0x0d, 0x0a, 0x00
+._s_hdr_start: db ' ** start **', 0x0d, 0x0a, 0x00
+._s_hdr_end: db ' ** end **', 0x0d, 0x0a, 0x00
+._s_hdr_process: db ' now working..', 0x00
+._s_buf: times 256 db 0x00
+._s_dot: db '.', 0x00
 
 ;==============================================================
 ; ファイル長の調整
