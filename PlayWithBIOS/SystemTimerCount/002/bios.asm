@@ -277,7 +277,7 @@ main:
     call pnl
     mov ax, ._s_hdr_start
     call ps
-    call exp_system_timer_count_read
+    call system_timer_count_read
     call pnl
 
     mov ax, ._s_hdr_process
@@ -293,11 +293,11 @@ main:
 
     dec bx
 
-    ;or bx, bx           ; 次の行とこの行のどちらかを選ぶ
-    cmp bx, 0
+    or bx, bx           ; 次の行とこの行のどちらかを選ぶ
+    ;cmp bx, 0
     ;test bx, bx
 
-    jne ._loop3         ; 3階層底i
+    jne ._loop3         ; 3階層底
     mov bx, 0xffff
     
     dec cx
@@ -313,12 +313,12 @@ main:
     call pnl
     mov ax, ._s_hdr_end
     call ps
-    call exp_system_timer_count_read
+    call system_timer_count_read
 
     call _hlt
 
-._s_hdr_target: db '### TARGET : cmp bx, 0  ###', 0x0d, 0x0a, 0x00
-;._s_hdr_target: db '### TARGET : or bx, bx ###', 0x0d, 0x0a, 0x00
+._s_hdr_target: db '### TARGET : or bx, bx ###', 0x0d, 0x0a, 0x00
+;._s_hdr_target: db '### TARGET : cmp bx, 0  ###', 0x0d, 0x0a, 0x00
 ;._s_hdr_target: db '### TARGET :test bx, bx ###', 0x0d, 0x0a, 0x00
 ._s_hdr_start: db ' ** start **', 0x0d, 0x0a, 0x00
 ._s_hdr_end: db ' ** end **', 0x0d, 0x0a, 0x00
