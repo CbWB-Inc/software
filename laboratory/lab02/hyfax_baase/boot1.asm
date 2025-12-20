@@ -50,62 +50,10 @@ start:
     call loadapp
 
     jmp MON_SEG:MON_OFF
-    ; push word MON_SEG
-    ; push word MON_OFF
-    ; retf
 
 hlt:
     hlt
     jmp hlt
-
-
-; ps:
-;   push ax
-;   mov si, ax
-; .loop:
-;   lodsb
-;   test al, al
-;   jz .exit
-;   mov ah, 0x0e
-;   int 0x10
-;   jmp .loop
-; .exit:
-;   pop ax
-;   ret
-
-; phd2:
-;     push ax
-;     shr al, 4
-;     call phd1
-;     pop ax
-;     call phd1
-;     ret
-;   ; push ax
-;   ; shr al, 4
-  ; call phd1
-  ; pop ax
-  ; push ax
-  ; call phd1
-  ; pop ax
-  ; ret
-
-
-
-; phd1:
-;         push ax
-;         and al, 0x0f
-;         cmp al, 0x09
-;         ja .gt_9
-;         add al, 0x30
-;         jmp .cnv_end
-; .gt_9:
-;         add al, 0x37
-
-; .cnv_end:
-;         out 0xE9, al
-;         ; mov bl, al
-;         pop ax
-;         ret
 
 _s_target_name db 'MONITOR BIN', 0x00
 

@@ -71,7 +71,6 @@ loadapp:
     div bx
     mov word [DIR_ENT_SEC_CNT], ax
 
-
     mov ax, [DIR_LBA]
     mov si, [TARGET_APP_NAME]
 
