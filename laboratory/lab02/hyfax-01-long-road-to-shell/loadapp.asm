@@ -187,12 +187,23 @@ file_read_loop:
     mov bx, [BYTE_PER_SEC_SAVE]
     mov [BYTE_PER_SEC], bx
 
-    mul bx
-    mul cx
-    add ax, [TARGET_APP_OFF]
-    mov word [si + DAP.BufferOff], ax     ; buffer offset
+    ; --- 転送先アドレス計算（1クラスタ = SEGだけ進める） ---
+
+    ; paras_per_cluster = SEC_PER_CLUS * 32
+    xor ax, ax
+    mov al, [SEC_PER_CLUS]
+    mov bx, 32
+    mul bx              ; AX = paras_per_cluster
+
+    mov bx, ax          ; BX = paras_per_cluster
+    mov ax, cx          ; cx = クラスタ番号(0,1,2…)
+    mul bx              ; AX = cx * paras_per_cluster
+
     add ax, [TARGET_APP_SEG]
-    mov word [si + DAP.BufferSeg], ax     ; buffer segment
+    mov word [si + DAP.BufferSeg], ax
+
+    mov ax, [TARGET_APP_OFF]    ; 推奨: 0
+    mov word [si + DAP.BufferOff], ax
     mov ax, [FILE_LBA]
     mov word [si + DAP.LBA_Low],   ax ; LBA low Low
     mov dword [si + DAP.LBA_High],  0 ; LBA high
