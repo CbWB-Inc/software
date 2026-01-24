@@ -99,7 +99,7 @@ dir_ent_sec_loop:
 
     jc disk_error
 
-PUTC '*'
+; PUTC '*'
     mov di, BUF_OFF
     mov cx, 16
 
@@ -206,7 +206,7 @@ find_dir_ent:
     mov bx, es:[si + FATHS.file_name]
     mov cx, 11
     call memcpy
-    call psd
+    ; call psd
 
     pop es
     pop ds
@@ -232,8 +232,16 @@ find_dir_ent:
     shl dx, 12
     mov [TARGET_APP_SEG], dx
 
+; push ax
+; call phd4
+; pop ax
+
+
+
     sub cx, 1
     mov bx, 1
+    cmp cx, 0
+    je .skip_alloc
 .alloc_loop:
     mov ah, svc_page_alloc
     int 0x80
@@ -246,7 +254,7 @@ find_dir_ent:
     loop .alloc_loop
 
 .skip_alloc:
-PUTC '%'
+; PUTC '%'
     ; ファイルサイズ・セクタ変換
     mov ax, es:[di+28]          ; File size low word
     add ax, 511
@@ -429,7 +437,14 @@ runapp:
 
     mov ax, APP_SEG
     mov es, ax
+; call phd4
+
+
     mov bx, APP_OFF
+; mov ax, bx
+; call phd4
+
+
     mov ax, si
 
     call loadapp
@@ -456,10 +471,51 @@ runapp:
     ; PUTC 0x0d
     ; PUTC 0x0a
     
+ push ax
+ push es
+ push cx
+; mov ax, [TARGET_APP_SEG]
+; call phd4
+; mov [APP_SEG], ax
+; mov ax, [TARGET_APP_OFF]
+; call phd4
+; mov [APP_OFF], ax
+; mov ax, [APP_SEG]
+; mov es, ax
+; mov si, [APP_OFF]
+; mov cx, 16
+; call dump_mem
+ pop cx
+ pop es
+ pop ax   
+    
+    
     mov bx, [app_arg_data]
     
     ; APPを実行
-    jmp APP_SEG:APP_OFF
+    ; jmp APP_SEG:APP_OFF
+
+    ; mov [TARGET_APP_OFF], ax
+    ; mov [TARGET_APP_SEG], bx
+    ; jmp TARGET_APP_SEG:TARGET_APP_OFF
+
+    mov ax, [TARGET_APP_SEG]
+    mov bx, [TARGET_APP_OFF]
+
+    and bx, 0xff00
+    shr bx, 4
+    or ax, bx
+    mov [TARGET_APP_SEG], ax
+    call phd4
+    mov word [TARGET_APP_OFF], 0x0000
+    
+    push word [TARGET_APP_SEG]
+    push word [TARGET_APP_OFF]
+    ; mov ax, [TARGET_APP_SEG]
+    ; mov ds, ax
+    ; mov es, ax
+    retf
+
 
 .load_failed:
     ; === 失敗: エラーメッセージを表示して戻る ===

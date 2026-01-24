@@ -5,7 +5,7 @@
 %define BUF_OFF     0x0000
 %define BOOT1_SEG   0x0800
 %define BOOT1_OFF   0x0000
-%define APP_SEG     0x1100
+%define APP_SEG     0x1000
 %define APP_OFF     0x0000
 %define MON_SEG     0x0050
 %define MON_OFF     0x0000

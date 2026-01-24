@@ -9,6 +9,8 @@ BITS 16
     out 0xE9, al
     pop ax
 %endmacro
+    
+    ; extern ps
 
 start:
     PUTC 'E'
@@ -16,6 +18,11 @@ start:
 
     ; ★★★ BXを先にDIに退避 ★★★
     mov di, bx
+
+    mov ax, cs
+    mov ds, ax
+    mov ax, msg_no_args
+    call ps
 
     ; --- 通常の初期化 ---
     push cs
@@ -26,6 +33,12 @@ start:
     pop  ss
     mov  sp, 0xfffe
     
+    
+    mov ax, cs
+    call phd4
+
+
+
     ; ★★★ ths_offsetに保存 ★★★
     mov [ths_offset], di
 
@@ -128,9 +141,14 @@ start:
     jmp .loop
 
 .no_args:
-    mov si, msg_no_args
-    mov ah, svc_write
-    int 0x80
+    mov ax, cs
+    mov ds, ax
+    ; mov es, ax
+    ; mov si, msg_no_args
+    ; mov ah, svc_write
+    ; int 0x80
+    mov ax, msg_no_args
+    call ps
 
 .done:
     mov ah, svc_newline

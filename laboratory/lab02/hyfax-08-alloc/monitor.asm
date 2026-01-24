@@ -105,6 +105,7 @@ int80_handler:
     push bp
     push ds
     push es
+    ; push dx
 
     cmp ah, 0x20
     je  .svc_write
@@ -198,7 +199,8 @@ int80_handler:
 ; ------------------------------------------------------------
 .svc_exec:                      ; AH=27h : アプリ起動
     cli
-    
+    PUTC 'X'
+    push bx
     ; ★★★ デバッグ: BXの値を表示 ★★★
     ; PUTC 'B'
     ; PUTC 'X'
@@ -275,6 +277,8 @@ int80_handler:
 
     mov ax, [.exit_code]
     sti
+    pop bx
+    PUTC 'Y'
     jmp .svc_exit
 
 .exit_code dw 0
@@ -407,6 +411,7 @@ int80_handler:
 ; ------------------------------------------------------------
 .svc_exit:
 .svc_iret:
+    ; pop dx
     pop es
     pop ds
     pop bp

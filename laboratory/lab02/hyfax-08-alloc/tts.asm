@@ -23,9 +23,12 @@ start:
     pop  ds
     push cs
     pop  es
-    push cs
-    pop  ss
-    mov  sp, 0xfffe
+    ; push cs
+    mov ax, STACK_SEG
+    mov ss, ax
+    mov sp, 0xE000
+    ; pop  ss
+    ; mov  sp, 0xfffe
 
     mov bx, ax
 
@@ -81,9 +84,22 @@ start:
     ; 内部コマンドならそれを実行
     ; 現在は内部コマンドがないので未処理
     
+    push cs
+    push ds
+    
     ; パースした最初がファイル名なのでこれを送る
+    ; mov bx, line_buf_ths
     mov bx, di
     mov si, [line_buf_ths]
+    ; mov si, [line_buf_ths + THS.off + 0]
+    ; push si
+    ; PUTC [si]
+    ; inc si
+    ; PUTC [si]
+    ; inc si
+    ; PUTC [si]
+    ; pop si
+
     mov ah, svc_exec
     int 0x80
 
