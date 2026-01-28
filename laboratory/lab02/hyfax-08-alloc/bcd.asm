@@ -29,9 +29,13 @@ start:
     pop  ds
     push cs
     pop  es
-    push cs
-    pop  ss
-    mov  sp, 0xfffe
+    ; push cs
+    ; pop  ss
+    ; mov  sp, 0xfffe
+
+    mov ah, svc_putchar
+    mov al, 0x0d
+    int 0x80
 
     ; --- メッセージ表示 ---
     mov si, msg_hello
@@ -239,12 +243,13 @@ start:
 
     mov ah, svc_getkey
     int 0x80
+    xor ax, ax
 
 
 exit:
     ; call exit_return
 
-    ; --- モニタへ戻る ---
+    ; --- TTSへ戻る ---
     ; 既定：MON_SEG:0000 に戻る（monitor側の戻り口が0x0000想定）
     ; push word MON_SEG
     ; mov ax, 0

@@ -14,6 +14,8 @@ org 0x0000
 
 start:
     PUTC 'T'
+    PUTC 'T'
+    PUTC 'S'
     PUTC ':'
 
     ; --- COMライク初期化（CS=DS=ES=SS=自分、SP設定） ---
@@ -24,20 +26,36 @@ start:
     push cs
     pop  es
     ; push cs
+    ; mov ax, STACK_SEG
+    ; mov ss, ax
+    ; mov sp, 0xE000
+    ; pop  ss
+    ; mov  sp, 0xfffe
+    
+    ; ★★★ スタックポインタをリセット（2回目以降のゴミをクリア） ★★★
+    cli
     mov ax, STACK_SEG
     mov ss, ax
     mov sp, 0xE000
-    ; pop  ss
-    ; mov  sp, 0xfffe
-
+    sti
     mov bx, ax
+
+    ; mov ax, cs
+    ; call phd4
 
     ; --- メッセージ表示 ---
     mov si, msg_hello
     mov ah, svc_write              ; write(DS:SI, CX)
     int 0x80
+; mov ah, svc_putchar
+; mov al, 0x0d
+; int 0x80
     mov ah, svc_newline
     int 0x80
+
+; mov ah, svc_putchar
+; mov al, '%'
+; int 0x80
 
     ; BitMapの初期化
     ; memory_end = 0x000A0000
@@ -45,14 +63,25 @@ start:
     mov ax, 0x0000
     call page_init
 
+.loop1:
     ; 入力バッファの初期化
     mov ax, line_buf
     mov bl, 0
     mov cx, line_buf_size
     call memset
 
+.clear_kbd
+    mov ah, 0x01      ; キー有無チェック
+    int 0x16
+    jz  .getkey_done         ; ZF=1 → バッファ空
 
-.loop1:
+    mov ah, 0x00      ; 1文字読み捨て
+    int 0x16
+    jmp .clear_kbd
+
+.getkey_done:
+    cld
+
     mov di, line_buf        ; バッファの準備
     call line_input         ; 行入力
 
@@ -76,22 +105,31 @@ start:
     call ucase
 
     ; ファイル名候補を抽出
+    ; push ds
+    ; mov ax, MON_SEG
+    ; mov ds, ax
     mov ax, file_name
     mov bx, [line_buf_ths + THS.off + 0]
     call strcpy   
-    
+    ; pop ds
+
+    ; mov si, ax
+    ; mov ah, svc_write
+    ; int 0x80
+
     ; 内部コマンドかどうかを判定
     ; 内部コマンドならそれを実行
     ; 現在は内部コマンドがないので未処理
     
-    push cs
-    push ds
+    ; push cs
+    ; push ds
     
     ; パースした最初がファイル名なのでこれを送る
     ; mov bx, line_buf_ths
     mov bx, di
-    mov si, [line_buf_ths]
-    ; mov si, [line_buf_ths + THS.off + 0]
+    ; mov si, [line_buf_ths]
+
+    mov si, [line_buf_ths + THS.off + 0]
     ; push si
     ; PUTC [si]
     ; inc si
@@ -99,6 +137,17 @@ start:
     ; inc si
     ; PUTC [si]
     ; pop si
+
+    ; push ax
+    ; mov ax, [line_buf_ths + THS.cnt]
+    ; call phd4    
+    ; pop ax
+
+    ; push ax
+    ; mov ax, ds
+    ; call phd4    
+    ; pop ax
+
 
     mov ah, svc_exec
     int 0x80
@@ -117,11 +166,12 @@ start:
     pop ds
 .nf_skip2:
 
-    ; バッファのクリア
-    mov ax, line_buf        
-    mov bl, 0
-    mov cx, cx
-    call memset
+    ; ; バッファのクリア
+    ; mov ax, line_buf        
+    ; mov bl, 0
+    ; ; mov cx, line_buf_ths
+    ; mov cx, line_buf_size
+    ; call memset
 
 .skip:
     jmp .loop1
@@ -148,14 +198,17 @@ start:
 ; line_input
 ;********************************
 line_input:
-    mov ax, line_buf
-    call strlen
+    ; mov ax, line_buf
+    ; call strlen
+    ; mov [.cnt], cl
+    xor cx, cx
     mov [.cnt], cl
 
 .loop2:
     ; --- ブロッキングで1キー待ち (AH=0x22) ---
     mov ah, svc_getkey  ; getkey_wait() -> AX=ASCII(0含む)
     int 0x80
+    ; mov [indata], ax
 
     ; ; for debug
     ; push ax
@@ -186,10 +239,19 @@ line_input:
     jmp .loop2
 
 .ascii:
+; PUTC '$'
     ; mov al, al
-    mov ah, svc_putchar
-    int 0x80
+    ; mov ax, [indata]
     mov [di], al
+    mov ah, 0x0E
+    mov bx, 0x0007
+    int 0x10
+
+
+    ; mov ah, svc_putchar
+    ; ; mov ah, 23
+    ; int 0x80
+    ; mov [di], al
 
     inc di
     inc byte [.cnt]
@@ -235,6 +297,7 @@ line_input:
     mov cx, line_buf_size
     call memset
     
+    xor cx, cx
     mov ax, line_buf
     mov bx, si
     call strcpy
@@ -264,41 +327,46 @@ line_input:
     mov ah, svc_putchar
     int 0x80                ; カーソルを再度戻す
 
+    xor ax, ax
     jmp .loop2
 
 ._tab:
     ; tabで現在の履歴バッファの内容を反映
     ; 直前のコマンドをリピートしたいときに便利
+    xor ax, ax
     jmp .exit
 
 ._0d:
+; PUTC '%'
+    ; バッファの位置アドレスを計算
     xor ax, ax
     mov al, [hisp]
     mov bx, line_buf_size
     mul bx
     mov si, hibuf
     add si, ax
+    ; バッファをクリア
     mov ax, si
     mov bl, 0
     mov cx, line_buf_size
     call memset
 
+    ; 行をバッファに反映
     mov ax, si
     mov bx, line_buf
     call strcpy
 
     mov ah, svc_newline
     int 0x80
-    mov byte [.cnt], 0
+    ; mov byte [.cnt], 0
     mov di, line_buf
-    
+
+    xor ax, ax
     ret
 
 
 .cnt db 0
 
-
-line_buf: times line_buf_size db 0
 
 
 %include 'common.asm'
@@ -306,12 +374,16 @@ line_buf: times line_buf_size db 0
 %include 'alloc.asm'
 
 ; ---- data ----
+line_buf: times line_buf_size db 0
+
 
 msg_hello:    db 'Hello from TTS', 13, 10, 0
 
 ; keybuf:       times 2 db 0
 
 hisp: db 0
+
+indata dw 0
 
 _s_msg_test1 db 'TEST STRING 1', 0x0d, 0x0a, 0x00
 

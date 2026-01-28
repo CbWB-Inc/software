@@ -1,6 +1,6 @@
 
 
-%define STACK_SEG   0x0050
+%define STACK_SEG   0x7000
 %define BUF_SEG     0x0960
 %define BUF_OFF     0x0000
 %define BOOT1_SEG   0x0800

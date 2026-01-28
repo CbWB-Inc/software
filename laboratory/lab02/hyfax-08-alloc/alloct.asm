@@ -31,9 +31,16 @@ start:
     pop  ds
     push cs
     pop  es
-    push cs
-    pop  ss
-    mov  sp, 0xfffe
+    ; push cs
+    ; pop  ss
+    ; mov  sp, 0xfffe
+
+    ; mov ax, cs
+    ; call phd4
+
+    mov ah, svc_putchar
+    mov al, 0x0d
+    int 0x80
 
     ; --- メッセージ表示 ---
     mov si, msg_hello
@@ -162,8 +169,22 @@ start:
     mov ah, svc_write
     int 0x80
 
+.clear_kbd
+    mov ah, 0x01      ; キー有無チェック
+    int 0x16
+    jz  .getkey_done         ; ZF=1 → バッファ空
+
+    mov ah, 0x00      ; 1文字読み捨て
+    int 0x16
+    jmp .clear_kbd
+
+.getkey_done:
+
+
+
     mov ah, svc_getkey
     int 0x80
+    xor ax, ax
 
 
 exit:

@@ -2,9 +2,22 @@
 
 loadapp:
 
+; PUTC '['
+; PUTC 'l'
+; PUTC 'o'
+; PUTC 'a'
+; PUTC 'd'
+; PUTC 'a'
+; PUTC 'p'
+; PUTC 'p'
+; PUTC ']'
+
+
     mov [TARGET_APP_NAME], ax
     mov ax, es
     mov [TARGET_APP_SEG], ax
+; mov ax, ds
+; call phd4
     mov [TARGET_APP_OFF], bx
     mov [FROM_MON], cx
 
@@ -77,6 +90,15 @@ loadapp:
     mov ax, [DIR_LBA]
     mov si, [TARGET_APP_NAME]
 
+    ; debug
+    ; push ax
+    ; mov ax, ds
+    ; call phd4    
+    ; pop ax
+
+    clc
+    mov word [read_error], 0
+
 dir_ent_sec_loop:
 
 ; PUTC '+'
@@ -118,13 +140,31 @@ find_entry:
     ; --- compare 11 bytes "MONITOR BIN" ---
     push di
     mov si, [TARGET_APP_NAME]
-    
+
+    ; -----   このエリアはMON_SEG
+    ; push di
+    ; push si
+    ; push ax
+    ; push ds
+
+    ; mov ax, TTS_SEG
+    ; mov ds, ax
+    ; mov ah, svc_write
+    ; int 0x80
+
+    ; pop ds
+    ; pop ax
+    ; pop si
+    ; pop di
+
+
+
     mov bx, 11
 cmp_loop:
     mov al, es:[di]
     mov ah, [si]
 
-    ; for debug     ←ここから下のコメントを外すと正しく動く
+    ; for debug
     ; PUTC '['
     ; PUTC ah
     ; PUTC ':'
@@ -163,6 +203,11 @@ not_found:
     jmp done
 
 disk_error:
+PUTC '['
+PUTC 'D'
+PUTC 'E'
+PUTC ']'
+
     mov al, 'X'
     out 0xE9, al
     mov al, ah
@@ -261,9 +306,21 @@ find_dir_ent:
     shr ax, 9
     mov [FILE_SECTOR], ax       ; ファイルのセクタ数
 
+    ; mov ax, dap
+    ; add ax, 2
+    ; mov bx, 0
+    ; mov cx, 14
+    ; call memset
+    ; mov si, dap
+    ; mov byte [si + DAP.Size], 16
+    ; mov byte [si + DAP.Reserved], 0
+    ; clc
+    ; mov word [read_error], 0
     mov cx, 0
 file_read_loop:
     PUTC '.'
+
+
     mov si, dap
     mov ax, [SEC_PER_CLUS]
     mov word [si + DAP.NumBlocks], ax ; sectors
@@ -403,13 +460,17 @@ file_read_loop:
     add ax, bx
     mov [FILE_LBA], ax            ; 次クラスタの先頭LBA
 
+    clc                     ; CF=0 (成功)
     jmp file_read_loop
 
-    clc                     ; CF=0 (成功)
 exit_loop:
 
 
 done:
+    ; mov bx, [read_error]
+    ; mov ah, svc_puthex
+    ; int 0x80
+
     mov ax, [read_error]
     ret
 
@@ -420,37 +481,66 @@ read_error dw 0
 ;     ax : ファイル名
 ;************************************
 runapp:
+
+; PUTC '['
+; PUTC 'r'
+; PUTC 'u'
+; PUTC 'n'
+; PUTC 'a'
+; PUTC 'p'
+; PUTC 'p'
+; PUTC ']'
+
     mov si, ax
 
     mov ah, svc_newline
     int 0x80
     
-    mov ax, 0x00
-    mov es, ax
-    mov al, es:[BOOT_DRV_OFF]
-    mov bl, al
-    ; call  phd4    
+    ; mov ax, 0x00
+    ; mov es, ax
+    ; mov al, es:[BOOT_DRV_OFF]
+    ; mov bl, al
+    ; ; call  phd4    
     
-    mov ax, MON_SEG
-    mov ds, ax
-    mov ds:[BOOT_DRV_OFF], bl
+    ; mov ax, MON_SEG
+    ; mov ds, ax
+    ; mov ds:[BOOT_DRV_OFF], bl
 
-    mov ax, APP_SEG
-    mov es, ax
+    ; mov ax, APP_SEG
+    ; mov es, ax
 ; call phd4
 
 
-    mov bx, APP_OFF
+    ; mov bx, APP_OFF
 ; mov ax, bx
 ; call phd4
 
+; push ax
+; mov ax, ds
+; call phd4
+; pop ax
 
     mov ax, si
-
+; push ax
+; PUTC '%'
+; call psd
+; ; mov ax, 0x0000
+; ; mov ds, ax
+; ; mov ax, si
+; ; call psd
+; PUTC '%'
+; pop ax
     call loadapp
 
     ; === loadapp の戻り値チェック ===
     jc .load_failed         ; CF=1 なら失敗
+
+; push ax
+; call phd4
+; ; mov bx, ax
+; ; mov ah, svc_puthex
+; ; int 0x80
+; pop ax
 
     cmp ax, 0
     jne .load_failed
@@ -471,10 +561,10 @@ runapp:
     ; PUTC 0x0d
     ; PUTC 0x0a
     
- push ax
- push es
- push cx
-; mov ax, [TARGET_APP_SEG]
+;  push ax
+;  push es
+;  push cx
+; ; mov ax, [TARGET_APP_SEG]
 ; call phd4
 ; mov [APP_SEG], ax
 ; mov ax, [TARGET_APP_OFF]
@@ -485,12 +575,10 @@ runapp:
 ; mov si, [APP_OFF]
 ; mov cx, 16
 ; call dump_mem
- pop cx
- pop es
- pop ax   
+;  pop cx
+;  pop es
+;  pop ax   
     
-    
-    mov bx, [app_arg_data]
     
     ; APPを実行
     ; jmp APP_SEG:APP_OFF
@@ -506,9 +594,14 @@ runapp:
     shr bx, 4
     or ax, bx
     mov [TARGET_APP_SEG], ax
-    call phd4
+    ; call phd4
     mov word [TARGET_APP_OFF], 0x0000
     
+    mov bx, [app_arg_data]
+    
+    ; call runapp のリターンアドレスを除去
+    add sp, 4           ; または pop cx などで捨てる
+
     push word [TARGET_APP_SEG]
     push word [TARGET_APP_OFF]
     ; mov ax, [TARGET_APP_SEG]
@@ -519,11 +612,12 @@ runapp:
 
 .load_failed:
     ; === 失敗: エラーメッセージを表示して戻る ===
+; PUTC '%'
     PUTC 'F'
     PUTC 'A'
     PUTC 'I'
     PUTC 'L'
-
+; PUTC '%'
     mov ax, 0x01
     ret
 

@@ -4,13 +4,15 @@
  BITS 16
  SECTION .text
 
-%define STACK_SEG  0x0050
-%define BUF_SEG    0x09E0
-%define BUF_OFF    0x0000
+%include 'hyfax.asm'
+
+; %define STACK_SEG  0x0050
+; %define BUF_SEG    0x09E0
+; %define BUF_OFF    0x0000
 %define PART_LBA   2048          ; 物理パーティション先頭（VBRのLBA）
-%define APP_SEG    0x1000
-%define APP_OFF    0x0000
-%define MON_SEG    0x0050
+; %define APP_SEG    0x1000
+; %define APP_OFF    0x0000
+; %define MON_SEG    0x0050
 %define MON_ADDR    0x0000
 %define PART_OFFSET 2048
 
@@ -131,7 +133,9 @@ phd2:
     shr al, 4
     call phd1
     pop ax
+    push ax
     call phd1
+    pop ax
     ret
   ; push ax
   ; shr al, 4
@@ -211,14 +215,26 @@ ph4:
   mov al, ah
   call ph2
   pop ax
+  push ax
   call ph2
+  pop ax
   ret
 
 
 dump_mem:
-    push si
+    ; push si
+    ; push cx
+    ; push ax
+    pushf
+    cld
+    push bx
     push cx
-    push ax
+    push dx
+    push si
+    push di
+    push ds
+    push es
+
 .next:
     test cx, cx
     jz .done
@@ -230,9 +246,18 @@ dump_mem:
     dec cx
     jmp .next
 .done:
-    pop ax
-    pop cx
+    pop es
+    pop ds
+    pop di
     pop si
+    pop dx
+    pop cx
+    pop bx
+    popf
+    
+    ; pop ax
+    ; pop cx
+    ; pop si
     ret
 
 strlen:
@@ -333,7 +358,7 @@ ucase:
 exit_return:
     ; --- モニタへ戻る ---
     ; 既定：MON_SEG:0000 に戻る（monitor側の戻り口が0x0000想定）
-    push word MON_SEG
+    push word TTS_SEG
     push word 0x0000
     retf
 
@@ -360,6 +385,22 @@ to_83:
     push bx
     push cx
 
+    ; ★★★ 内部バッファをクリア ★★★
+    mov ax, cs
+    mov es, ax
+    
+    ; .input_copy をクリア (256バイト)
+    mov di, .input_copy
+    xor al, al
+    mov cx, 256
+    rep stosb
+    
+    ; file_name_ths をクリア (128ワード = 256バイト)
+    mov di, file_name_ths
+    xor ax, ax
+    mov cx, 128
+    rep stosw
+    
     ; === 入力文字列(file_name)をCSセグメント内にコピー ===
     mov si, file_name         ; DS:SI = file_name
     push cs
@@ -457,7 +498,10 @@ to_83:
 .ext dw 1
 .si_save dw 1
 file_name_ths times 128 dw 0 
+; dw 0xDEAD
 line_buf_ths times 128 dw 0
+; dw 0xDEAD
+
 file_name times 256 db 0
 
 ;************************************
@@ -480,6 +524,8 @@ split:
     cmp byte [si], 0
     je .done
 
+    ; cmp cx, 126
+    ; jae .done
     mov [bx], si                ; offset 登録
     add bx, 2
     inc cx

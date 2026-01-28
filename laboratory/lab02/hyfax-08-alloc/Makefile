@@ -31,10 +31,12 @@ TTS_BIN   := $(BUILD)/TTS.BIN
 ECHO_BIN  := $(BUILD)/ECHO
 BCD_BIN   := $(BUILD)/BCD
 ALLOC_T_BIN   := $(BUILD)/ALLOCT
+DEBUG_BIN   := $(BUILD)/DEBUG
 
 TARGETS = $(BUILD)/boot0.bin $(BUILD)/boot1.bin $(BUILD)/monitor.bin \
 			$(BUILD)/app.bin $(BUILD)/tts.bin $(BUILD)/echo \
-			$(BUILD)/app1.bin $(BUILD)/bcd $(BUILD)/alloct
+			$(BUILD)/app1.bin $(BUILD)/bcd $(BUILD)/alloct \
+			$(BUILD)/debug
 
 # --- サイズ関連 ---
 SIZE_MB   := 30
@@ -61,7 +63,7 @@ $(BUILD)/boot0.bin: boot0.asm | $(BUILD)
 $(BUILD)/boot1.bin: boot1.asm | $(BUILD)
 	$(ASM) -f bin $< -o $@
 
-$(BUILD)/bcd: bcd.asm | $(BUILD)
+$(BUILD)/bcd: bcd.asm bcdlib.asm common.asm loadapp.asm| $(BUILD)
 	$(ASM) -f bin $< -o $@
 
 # $(BUILD)/monitor.o: monitor.asm | $(BUILD)
@@ -83,16 +85,19 @@ $(BUILD)/monitor.bin: monitor.asm common.asm loadapp.asm  | $(BUILD)
 # $(BUILD)/monitor.bin: $(BUILD)/monitor.elf
 # 	$(OBJCOPY) -O binary $< $@
 
-$(BUILD)/app.o: app.asm | $(BUILD)
+$(BUILD)/app.o: app.asm common.asm loadapp.asm | $(BUILD)
 	$(ASM) -f elf $< -o $@
 
-$(BUILD)/app1.o: app1.asm | $(BUILD)
+$(BUILD)/app1.o: app1.asm common.asm loadapp.asm | $(BUILD)
 	$(ASM) -f elf $< -o $@
 
-$(BUILD)/echo.o: echo.asm | $(BUILD)
+$(BUILD)/echo.o: echo.asm common.asm loadapp.asm | $(BUILD)
 	$(ASM) -f elf $< -o $@
 
-$(BUILD)/alloct.o: alloct.asm | $(BUILD)
+$(BUILD)/alloct.o: alloct.asm common.asm loadapp.asm alloc.asm | $(BUILD)
+	$(ASM) -f elf $< -o $@
+
+$(BUILD)/debug.o: debug.asm common.asm loadapp.asm | $(BUILD)
 	$(ASM) -f elf $< -o $@
 
 # $(BUILD)/bcd.o: bcd.asm | $(BUILD)
@@ -131,6 +136,12 @@ $(BUILD)/alloct.elf: $(BUILD)/alloct.o $(BUILD)/common.o
 	$(LD) -m elf_i386 -Ttext 0x0000 -o $@ $^
 
 $(BUILD)/alloct: $(BUILD)/alloct.elf
+	$(OBJCOPY) -O binary $< $@
+
+$(BUILD)/debug.elf: $(BUILD)/debug.o 
+	$(LD) -m elf_i386 -Ttext 0x0000 -o $@ $^
+
+$(BUILD)/debug: $(BUILD)/debug.elf
 	$(OBJCOPY) -O binary $< $@
 
 # $(BUILD)/bcd.elf: $(BUILD)/bcd.o 
@@ -184,6 +195,7 @@ image: all
 	mcopy -i $(IMG)@@1048576 $(ECHO_BIN) ::/ECHO
 	mcopy -i $(IMG)@@1048576 $(BCD_BIN) ::/BCD
 	mcopy -i $(IMG)@@1048576 $(ALLOC_T_BIN) ::/ALLOCT
+	mcopy -i $(IMG)@@1048576 $(DEBUG_BIN) ::/DEBUG
 	mcopy -i $(IMG)@@1048576 $(APP_BIN) ::/APP.BIN
 	mcopy -i $(IMG)@@1048576 $(APP1_BIN) ::/APP1.BIN
 	mcopy -i $(IMG)@@1048576 $(APP_BIN) ::/APP2.BIN

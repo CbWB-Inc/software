@@ -30,9 +30,9 @@ start:
     pop  ds
     push cs
     pop  es
-    push cs
-    pop  ss
-    mov  sp, 0xfffe
+    ; push cs
+    ; pop  ss
+    ; mov  sp, 0xfffe
 
     ; --- メッセージ表示 ---
     mov si, msg_hello

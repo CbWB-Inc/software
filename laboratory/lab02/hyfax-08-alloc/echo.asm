@@ -19,23 +19,23 @@ start:
     ; ★★★ BXを先にDIに退避 ★★★
     mov di, bx
 
-    mov ax, cs
-    mov ds, ax
-    mov ax, msg_no_args
-    call ps
+    ; mov ax, cs
+    ; mov ds, ax
+    ; mov ax, msg_no_args
+    ; call ps
 
     ; --- 通常の初期化 ---
     push cs
     pop  ds
     push cs
     pop  es
-    push cs
-    pop  ss
-    mov  sp, 0xfffe
+    ; push cs
+    ; pop  ss
+    ; mov  sp, 0xfffe
     
     
-    mov ax, cs
-    call phd4
+    ; mov ax, cs
+    ; call phd4
 
 
 
@@ -71,6 +71,10 @@ start:
     
     ; 全ての引数を表示（1番目から）
     mov word [current_index], 1
+
+    mov ah, svc_putchar
+    mov al, 0x0d
+    int 0x80
 
 .loop:
     ; 現在のインデックスを取得
@@ -151,6 +155,10 @@ start:
     call ps
 
 .done:
+    mov ah, svc_putchar
+    mov al, 0x0d
+    int 0x80
+
     mov ah, svc_newline
     int 0x80
     mov ah, svc_newline
@@ -166,7 +174,7 @@ exit:
     push word TTS_SEG
     push word 0x0000
     retf
-
+    ; call  exit_return
 
 %include 'common.asm'
 

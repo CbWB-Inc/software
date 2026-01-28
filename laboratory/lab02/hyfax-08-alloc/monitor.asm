@@ -23,6 +23,8 @@ global start
 ; ---------------- 本体 ----------------
 start:
     PUTC 'M'
+    PUTC 'O'
+    PUTC 'N'
     PUTC ':'
     cli
     mov ax, STACK_SEG
@@ -54,7 +56,11 @@ start:
     call loadapp
     mov ax, 0
 
-    jmp TTS_SEG:TTS_OFF
+    ; jmp TTS_SEG:TTS_OFF
+
+    push word TTS_SEG
+    push word TTS_OFF
+    retf
 
     jmp hlt
 
@@ -98,6 +104,7 @@ install_int80:
 ; INT80h ハンドラ本体
 ; ------------------------------------------------------------
 int80_handler:
+    cld
     push bx
     push cx
     push si
@@ -156,28 +163,47 @@ int80_handler:
 
 ; ------------------------------------------------------------
 .svc_getkey:                     ; AH=22h : キー入力待ち (ALに返す)
+    push dx
+
+    ; mov ax, sp
+    ; call phd4
+    
     xor ax, ax
     int 0x16
+    
+    test al, al
+    
+    pop dx
     jmp .svc_iret
 
 ; ------------------------------------------------------------
 .svc_putchar:                    ; AH=23h : ALを1文字出力
+    ; push ax
     mov ah, 0x0E
     mov bx, 0x0007
     int 0x10
+    ; pop ax
     jmp .svc_exit
 
 ; ------------------------------------------------------------
+    nop
+    nop
+    nop
+
 .svc_newline:                    ; AH=24h : 改行(CR+LF)
+    ; push ax
     mov ah, 0x0E
+    mov bx, 0x0007
     mov al, 0x0D
     int 0x10
     mov al, 0x0A
     int 0x10
+    ; pop ax
     jmp .svc_exit
 
 ; ------------------------------------------------------------
 .svc_cls:                        ; AH=25h : 画面クリア
+; PUTC '&'
     mov ax, 0x0003
     int 0x10
     jmp .svc_exit
@@ -199,7 +225,7 @@ int80_handler:
 ; ------------------------------------------------------------
 .svc_exec:                      ; AH=27h : アプリ起動
     cli
-    PUTC 'X'
+    ; PUTC 'X'
     push bx
     ; ★★★ デバッグ: BXの値を表示 ★★★
     ; PUTC 'B'
@@ -250,6 +276,19 @@ int80_handler:
     ; --- src を ES:SI にする ---
     pop si                      ; SI = 呼び出し元の offset
     pop es                      ; ES = 呼び出し元の segment
+; PUTC '%'
+; push si
+; PUTC es:[si]
+; inc si
+; PUTC es:[si]
+; inc si
+; PUTC es:[si]
+; inc si
+; PUTC es:[si]
+; inc si
+; pop si
+; PUTC '%'
+
 
     cld
 .copy_in:
@@ -265,7 +304,13 @@ int80_handler:
 
     ; --- 実行 ---
     mov ax, file_name
+; PUTC '$'
+; call psd
+; PUTC '$'
+
     mov cx, 1
+    pop bx
+    sti
     call runapp
     mov [.exit_code], ax
 
@@ -277,8 +322,8 @@ int80_handler:
 
     mov ax, [.exit_code]
     sti
-    pop bx
-    PUTC 'Y'
+    ; pop bx
+    ; PUTC 'Y'
     jmp .svc_exit
 
 .exit_code dw 0

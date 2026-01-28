@@ -272,6 +272,26 @@ page_free:
     BIT_CLR
     xor ax, ax
     clc
+
+    ; push ds
+    ; push dx
+    ; push cx
+    ; push bx
+
+    ; shl dx, 12
+    ; mov ds, dx
+    ; mov bl, 0
+    ; mov cx, 4096
+    ; call memset
+
+    ; pop bx
+    ; pop cx
+    ; pop dx
+    ; pop ds
+
+
+
+
     jmp .ok
 
 .err:

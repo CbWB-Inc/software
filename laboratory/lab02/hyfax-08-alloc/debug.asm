@@ -19,11 +19,13 @@ BITS 16
 ; extern phd1
 ; extern phd2
 ; extern phd4
-    extern func
-    extern ps
+    ; extern func
+    ; extern ps
 
 start:
-    PUTC 'A'
+    PUTC 'D'
+    PUTC 'B'
+    PUTC 'G'
     PUTC ':'
 
     ; --- COMライク初期化（CS=DS=ES=SS=自分、SP設定） ---
@@ -31,11 +33,19 @@ start:
     pop  ds
     push cs
     pop  es
-    ; push cs
-    ; pop  ss
-    ; mov  sp, 0xfffe
+    push cs
+    pop  ss
+    mov  sp, 0xfffe
 
     ; --- メッセージ表示 ---
+    ; mov ax, TTS_SEG
+    ; mov ds, ax
+    ; mov es, ax    
+    ; mov ax, msg_hello
+    ; mov cx, 20
+    ; call dump_mem
+    ; call psd
+    
     mov si, msg_hello
     mov ah, 0x20              ; write(DS:SI, CX)
     int 0x80
@@ -73,10 +83,10 @@ exit:
 
 
 
-; %include 'common.asm'
+%include 'common.asm'
 
 ; ---- data ----
-msg_hello:    db 'Hello from APP', 13, 10, 0
+msg_hello:    db 'Hello from DEBUG', 13, 10, 0
 
 msg_hello2:    db 'Hello from APP func', 13, 10, 0
 msg_hello3:    db 'Hello from APP ps', 13, 10, 0
